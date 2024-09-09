@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LOKI_Network.Migrations
 {
     [DbContext(typeof(LokiContext))]
-    [Migration("20240909071751_Init")]
+    [Migration("20240909092505_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -248,16 +248,15 @@ namespace LOKI_Network.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Bio")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Gender")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("LastLoginDate")
                         .HasColumnType("datetime2");
