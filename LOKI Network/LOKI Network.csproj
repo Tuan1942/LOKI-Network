@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="DbContexts\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
