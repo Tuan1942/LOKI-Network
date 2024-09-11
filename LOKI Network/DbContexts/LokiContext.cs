@@ -93,7 +93,7 @@ namespace LOKI_Network.DbContexts
         public string Username { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public string ProfilePictureUrl { get; set; }
+        public string? ProfilePictureUrl { get; set; }
         public bool Gender { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime LastLoginDate { get; set; }

@@ -28,7 +28,7 @@ namespace LOKI_Network.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterAsync([FromBody] UserDTO user)
+        public IActionResult Register([FromBody] UserDTO user)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace LOKI_Network.Controllers
 
                 return Ok(new { user.Username });
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return BadRequest("An error occur when register.");
             }
@@ -63,7 +63,7 @@ namespace LOKI_Network.Controllers
             }
 
             var token = _userService.GenerateJwtToken(u, _configuration);
-            return Ok(token);
+            return Ok(new { token });
         }
 
     }

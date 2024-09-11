@@ -34,9 +34,10 @@ namespace LOKI_Network.Services
             var u = new User
             {
                 Username = user.Username,
-                PasswordHash = user.PasswordHash,
+                PasswordHash = HashPassword(user.PasswordHash),
                 Email = user.Email,
-                Gender = user.Gender
+                Gender = user.Gender,
+                CreatedDate = DateTime.Now
             };
             _context.Users.Add(u);
             _context.SaveChanges();
@@ -49,7 +50,7 @@ namespace LOKI_Network.Services
             u.Username = user.Username;
             u.Gender = user.Gender;
             u.Email = user.Email;
-            u.PasswordHash = user.PasswordHash;
+            u.PasswordHash = HashPassword(user.PasswordHash);
             _context.SaveChanges();
         }
 
