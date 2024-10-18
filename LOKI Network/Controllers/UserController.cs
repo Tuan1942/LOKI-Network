@@ -2,6 +2,7 @@
 using LOKI_Network.DbContexts;
 using LOKI_Network.DTOs;
 using LOKI_Network.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -62,9 +63,20 @@ namespace LOKI_Network.Controllers
                 return Unauthorized();
             }
 
-            var token = _userService.GenerateJwtToken(u, _configuration);
+            var token = "Bearer " + _userService.GenerateJwtToken(u, _configuration);
             return Ok(new { token });
         }
 
+        [HttpGet("info")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var username = HttpContext.User.Identity.Name;
+            var user = _userService.GetUser(Guid.Parse(userId));
+            var roles = HttpContext.User.FindAll(ClaimTypes.Role)?.Select(c => c.Value).ToList();
+
+            return Ok(user);
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace LOKI_Network.Services
         void AddUser(UserDTO user);
         void RemoveUser(Guid userId);
         void UpdateUser(UserDTO user);
-        User GetUser(int id);
+        User GetUser(Guid id);
         User GetUser(string username);
         string HashPassword(string password);
         bool VerifyPassword(string enteredPassword, string storedHash);
@@ -61,7 +61,7 @@ namespace LOKI_Network.Services
             _context.Users.Remove(user);
         }
 
-        public User GetUser(int id)
+        public User GetUser(Guid id)
         {
             return _context.Users.Find(id);
         }
@@ -115,5 +115,16 @@ namespace LOKI_Network.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        //private List<string> GetUserRoles(int userId)
+        //{
+        //    var roles = new List<string>();
+        //    var userRoles = _context.UserRoles.Where(ur => ur.UserId == userId).ToList();
+        //    foreach (var userRole in userRoles)
+        //    {
+        //        roles.Add(_context.Roles.First(r => r.Id == userRole.RoleId).Name);
+        //    }
+        //    return roles;
+        //}
+
     }
 }
