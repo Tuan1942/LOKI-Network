@@ -1,5 +1,6 @@
 ﻿using LOKI_Network.DbContexts;
 using LOKI_Network.DTOs;
+using LOKI_Network.Interface;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,17 +9,6 @@ using System.Text;
 
 namespace LOKI_Network.Services
 {
-    public interface IUserService
-    {
-        void AddUser(UserDTO user);
-        void RemoveUser(Guid userId);
-        void UpdateUser(UserDTO user);
-        User GetUser(Guid id);
-        User GetUser(string username);
-        string HashPassword(string password);
-        bool VerifyPassword(string enteredPassword, string storedHash);
-        string GenerateJwtToken(User user, IConfiguration configuration);
-    }
 
     public class UserService : IUserService
     {
