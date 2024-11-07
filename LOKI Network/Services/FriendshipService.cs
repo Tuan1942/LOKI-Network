@@ -20,25 +20,38 @@ namespace LOKI_Network.Services
                 Status = 0,
             };
             _lokiContext.Friendships.Add(friendship);
-            _lokiContext.SaveChangesAsync();
+            await _lokiContext.SaveChangesAsync();
         }
 
-        public void Block(Guid sender, Guid receiver)
+        public async Task ResponseFriendRequest(Guid sender, Guid friendShipId, bool accepted)
+        {
+            var friendship = _lokiContext.Friendships.FirstOrDefault(f => f.FriendshipId == friendShipId && f.UserId == sender);
+            if (friendship == null) { throw new UnauthorizedAccessException(); }
+            if (accepted)
+            {
+                friendship.Status = FriendshipStatus.Accepted;
+                _lokiContext.Friendships.Update(friendship);
+            }
+            else _lokiContext.Friendships.Remove(friendship);
+            await _lokiContext.SaveChangesAsync();
+        }
+
+        public async Task UnFriend(Guid sender, Guid receiver)
+        {
+            var query = _lokiContext.Friendships.Where(f => (f.FriendshipId == sender && f.UserId == receiver) || (f.FriendshipId == receiver && f.UserId == sender));
+            foreach (var friendship in query)
+            {
+                _lokiContext.Friendships.Remove(friendship);
+            }
+            await _lokiContext.SaveChangesAsync();
+        }
+
+        public async Task UnBlock(Guid sender, Guid receiver)
         {
             throw new NotImplementedException();
         }
 
-        public void ResponseFriendRequest(Guid sender, Guid friendShipId, bool accepted)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UnBlock(Guid sender, Guid receiver)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UnFriend(Guid sender, Guid receiver)
+        public async Task Block(Guid sender, Guid receiver)
         {
             throw new NotImplementedException();
         }
