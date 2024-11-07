@@ -169,8 +169,7 @@ namespace LOKI_Network.DbContexts
     public enum MessageType
     {
         Text,
-        Image,
-        Video,
+        Media,
         File
     }
     public class MessageStatus
@@ -205,6 +204,7 @@ namespace LOKI_Network.DbContexts
         FriendRequest,
         Mention
     }
+
     public class UserSettings
     {
         public Guid UserSettingsId { get; set; } // Primary Key

@@ -5,11 +5,11 @@ namespace LOKI_Network.Interface
 {
     public interface IUserService
     {
-        void AddUser(UserDTO user);
-        void RemoveUser(Guid userId);
-        void UpdateUser(UserDTO user);
-        User GetUser(Guid id);
-        User GetUser(string username);
+        Task AddUser(UserDTO user);
+        Task RemoveUser(Guid userId);
+        Task UpdateUser(UserDTO user);
+        Task<User> GetUser(Guid id);
+        Task<User> GetUser(string username);
         bool VerifyPassword(string enteredPassword, string storedHash);
         string GenerateJwtToken(User user, IConfiguration configuration);
     }

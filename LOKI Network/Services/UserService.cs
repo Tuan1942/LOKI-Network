@@ -19,7 +19,7 @@ namespace LOKI_Network.Services
             _context = context;
         }
 
-        public void AddUser(UserDTO user)
+        public async Task AddUser(UserDTO user)
         {
             var u = new User
             {
@@ -30,10 +30,10 @@ namespace LOKI_Network.Services
                 CreatedDate = DateTime.Now
             };
             _context.Users.Add(u);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void UpdateUser(UserDTO user)
+        public async Task UpdateUser(UserDTO user)
         {
             var u = _context.Users.FirstOrDefault(u => u.UserId == user.UserId);
             if (u == null) throw new KeyNotFoundException();
@@ -41,22 +41,23 @@ namespace LOKI_Network.Services
             u.Gender = user.Gender;
             u.Email = user.Email;
             u.PasswordHash = HashPassword(user.PasswordHash);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void RemoveUser(Guid userId)
+        public async Task RemoveUser(Guid userId)
         {
             var user = _context.Users.Find(userId);
             if (user == null) throw new KeyNotFoundException();
             _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
         }
 
-        public User GetUser(Guid id)
+        public async Task<User> GetUser(Guid id)
         {
-            return _context.Users.Find(id);
+            return await _context.Users.FindAsync(id);
         }
 
-        public User GetUser(string username)
+        public async Task<User> GetUser(string username)
         {
             return _context.Users.FirstOrDefault(u => u.Username == username);
         }

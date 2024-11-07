@@ -16,7 +16,7 @@ using System.Text;
 
 namespace LOKI_Network.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -58,7 +58,7 @@ namespace LOKI_Network.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserDTO user)
         {
-            var u = _userService.GetUser(user.Username);
+            var u = await _userService.GetUser(user.Username);
             if (u == null || !_userService.VerifyPassword(user.PasswordHash, u.PasswordHash))
             {
                 return Unauthorized();
