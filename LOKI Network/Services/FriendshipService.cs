@@ -1,5 +1,6 @@
 ﻿using LOKI_Network.DbContexts;
 using LOKI_Network.Interface;
+using Microsoft.EntityFrameworkCore;
 
 namespace LOKI_Network.Services
 {
@@ -12,13 +13,43 @@ namespace LOKI_Network.Services
         }
         public async Task AddFriendRequest(Guid sender, Guid receiver)
         {
-            Friendship friendship = new Friendship()
+            // Check if any existing friendship already exists between sender and receiver
+            var existingFriendships = await _lokiContext.Friendships
+                .Where(f =>
+                    (f.FriendId == sender && f.UserId == receiver) ||
+                    (f.FriendId == receiver && f.UserId == sender))
+                .ToListAsync();
+
+            // Validate existing friendships
+            if (existingFriendships.Any())
             {
-                CreatedDate = DateTime.Now,
+                var blockedFriendship = existingFriendships.FirstOrDefault(f => f.Status == FriendshipStatus.Blocked);
+
+                // Check if sender has blocked receiver
+                if (blockedFriendship != null && blockedFriendship.UserId == sender)
+                {
+                    throw new InvalidOperationException("Please unblock this account before sending a friend request.");
+                }
+
+                // Check if receiver has blocked sender
+                if (blockedFriendship != null && blockedFriendship.FriendId == sender)
+                {
+                    throw new InvalidOperationException("You have been blocked by this user.");
+                }
+
+                // Other non-blocked friendship already exists
+                throw new InvalidOperationException("Friendship already exists.");
+            }
+
+            // If no friendship exists, create a new pending friend request
+            var friendship = new Friendship
+            {
+                CreatedDate = DateTime.UtcNow,
                 UserId = sender,
                 FriendId = receiver,
-                Status = 0,
+                Status = FriendshipStatus.Pending,
             };
+
             _lokiContext.Friendships.Add(friendship);
             await _lokiContext.SaveChangesAsync();
         }
@@ -38,12 +69,32 @@ namespace LOKI_Network.Services
 
         public async Task UnFriend(Guid sender, Guid receiver)
         {
-            var query = _lokiContext.Friendships.Where(f => (f.FriendshipId == sender && f.UserId == receiver) || (f.FriendshipId == receiver && f.UserId == sender));
-            foreach (var friendship in query)
-            {
-                _lokiContext.Friendships.Remove(friendship);
-            }
+            var query = _lokiContext.Friendships.Where(f => 
+            (f.FriendshipId == sender && f.UserId == receiver) 
+            || (f.FriendshipId == receiver && f.UserId == sender));
+            _lokiContext.Friendships.RemoveRange(query);
             await _lokiContext.SaveChangesAsync();
+        }
+
+        public async Task<List<Friendship>> GetAllFriendRequests(Guid userId)
+        {
+            // Retrieve all pending friend requests where the user is the receiver
+            return await _lokiContext.Friendships
+                .Where(f => f.FriendId == userId && f.Status == FriendshipStatus.Pending)
+                .ToListAsync();
+        }
+
+        public async Task<List<User>> GetAllFriends(Guid userId)
+        {
+            // Retrieve all accepted friendships where the user is either the sender or the receiver
+            var userList = await _lokiContext.Friendships
+                .Where(f =>
+                (f.UserId == userId || f.FriendId == userId) &&
+                f.Status == FriendshipStatus.Accepted)
+                .Select(f => f.UserId == userId ? f.Friend : f.User) // Selects the friend based on relationship
+                .ToListAsync();
+
+            return userList;
         }
 
         public async Task UnBlock(Guid sender, Guid receiver)
