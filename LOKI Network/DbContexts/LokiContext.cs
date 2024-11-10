@@ -226,6 +226,7 @@ namespace LOKI_Network.DbContexts
     {
         public Guid AttachmentId { get; set; } // Primary Key
         public Guid MessageId { get; set; } // Foreign Key
+        public string FileName { get; set; }
         public string FileUrl { get; set; }
         public FileType FileType { get; set; }
         public DateTime CreatedDate { get; set; }

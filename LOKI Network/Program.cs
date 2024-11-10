@@ -13,7 +13,14 @@ var configuration = builder.Configuration;
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+
+// Register services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IFriendshipService, FriendshipService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IFileService, FileService>(provider =>
+    new FileService(provider.GetRequiredService<LokiContext>(), configuration["FileStoragePath"]));
+
 builder.Services.AddControllers(
     options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
 

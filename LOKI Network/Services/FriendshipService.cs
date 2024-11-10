@@ -71,7 +71,8 @@ namespace LOKI_Network.Services
         {
             var query = _lokiContext.Friendships.Where(f => 
             (f.FriendshipId == sender && f.UserId == receiver) 
-            || (f.FriendshipId == receiver && f.UserId == sender));
+            || (f.FriendshipId == receiver && f.UserId == sender)
+            || f.Status == FriendshipStatus.Accepted);
             _lokiContext.Friendships.RemoveRange(query);
             await _lokiContext.SaveChangesAsync();
         }
