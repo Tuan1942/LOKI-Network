@@ -2,6 +2,7 @@ using LOKI_Network.DbContexts;
 using LOKI_Network.Interface;
 using LOKI_Network.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -15,6 +16,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
 // Register services
+builder.Services.AddSingleton<WebSocketService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMessageService, MessageService>();

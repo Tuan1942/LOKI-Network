@@ -21,16 +21,23 @@ namespace LOKI_Network.Services
 
         public async Task AddUser(UserDTO user)
         {
-            var u = new User
+            try
             {
-                Username = user.Username,
-                PasswordHash = HashPassword(user.PasswordHash),
-                Email = user.Email,
-                Gender = user.Gender,
-                CreatedDate = DateTime.Now
-            };
-            _context.Users.Add(u);
-            await _context.SaveChangesAsync();
+                var u = new User
+                {
+                    Username = user.Username,
+                    PasswordHash = HashPassword(user.PasswordHash),
+                    Email = user.Email,
+                    Gender = user.Gender,
+                    CreatedDate = DateTime.Now
+                };
+                _context.Users.Add(u);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public async Task UpdateUser(UserDTO user)

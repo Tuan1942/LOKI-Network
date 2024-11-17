@@ -1,19 +1,22 @@
 ﻿using LOKI_Network.DbContexts;
 using LOKI_Network.Interface;
+using LOKI_Network.Services;
 using Microsoft.EntityFrameworkCore;
 
 public class MessageService : IMessageService
 {
-    private readonly LokiContext _lokiContext;
+    private readonly LokiContext _dbContext;
     private readonly IFileService _fileService;
+    private readonly WebSocketService _webSocketService;
 
-    public MessageService(LokiContext lokiContext, IFileService fileService)
+    public MessageService(LokiContext lokiContext, IFileService fileService, WebSocketService webSocketService)
     {
-        _lokiContext = lokiContext;
+        _dbContext = lokiContext;
         _fileService = fileService;
+        _webSocketService = webSocketService;
     }
 
-    public async Task<Message> CreateMessageAsync(Guid senderId, string content, Stream fileStream, string fileName, FileType fileType)
+    public async Task<Message> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files)
     {
         var message = new Message
         {
@@ -23,35 +26,58 @@ public class MessageService : IMessageService
             SentDate = DateTime.UtcNow
         };
 
-        // Save message to database first
-        _lokiContext.Messages.Add(message);
-        await _lokiContext.SaveChangesAsync();
+        _dbContext.Messages.Add(message);
+        await _dbContext.SaveChangesAsync();
 
-        // If there is an attachment, use FileService to handle it
-        if (fileStream != null)
+        // Handle each file in the list
+        foreach (var file in files)
         {
-            var fileUrl = await _fileService.UploadFile(message.MessageId, fileStream, fileName, fileType);
+            using var fileStream = file.OpenReadStream();
+            var fileUrl = await _fileService.UploadFile(message.MessageId, fileStream, file.FileName, FileType.Other);
 
             var attachment = new Attachment
             {
                 AttachmentId = Guid.NewGuid(),
                 MessageId = message.MessageId,
                 FileUrl = fileUrl,
-                FileName = fileName,
-                FileType = fileType,
+                FileName = file.FileName,
+                FileType = FileType.Other,
                 CreatedDate = DateTime.UtcNow
             };
 
-            _lokiContext.Attachments.Add(attachment);
-            await _lokiContext.SaveChangesAsync();
+            _dbContext.Attachments.Add(attachment);
         }
 
+        await _dbContext.SaveChangesAsync();
         return message;
+    }
+    public async Task<bool> SendMessageAsync(Guid senderId, Guid messageId, Guid conversationId)
+    {
+        var message = _dbContext.Messages.Find(messageId);
+        if (message == null) throw new Exception("Message not found.");
+        if (message.ConversationId == Guid.Empty)
+        {
+            message.ConversationId = conversationId;
+        }
+        else
+        {
+            _dbContext.Add(new Message
+            {
+                MessageId = Guid.NewGuid(),
+                SenderId = message.SenderId,
+                ConversationId = conversationId,
+                Content = message.Content,
+                SentDate = DateTime.UtcNow
+            });
+        }
+        await _dbContext.SaveChangesAsync();
+        await _webSocketService.BroadcastMessageAsync(conversationId, $"New message from {senderId}");
+        return true;
     }
 
     public async Task DeleteMessageAsync(Guid messageId)
     {
-        var message = await _lokiContext.Messages
+        var message = await _dbContext.Messages
             .Include(m => m.Attachments) 
             .FirstOrDefaultAsync(m => m.MessageId == messageId);
 
@@ -67,7 +93,7 @@ public class MessageService : IMessageService
         }
 
         // Delete the message itself
-        _lokiContext.Messages.Remove(message);
-        await _lokiContext.SaveChangesAsync();
+        _dbContext.Messages.Remove(message);
+        await _dbContext.SaveChangesAsync();
     }
 }

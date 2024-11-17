@@ -4,7 +4,8 @@ namespace LOKI_Network.Interface
 {
     public interface IMessageService
     {
-        Task<Message> CreateMessageAsync(Guid senderId, string content, Stream fileStream, string fileName, FileType fileType);
+        Task<Message> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files);
         Task DeleteMessageAsync(Guid messageId);
+        Task<bool> SendMessageAsync(Guid senderId, Guid messageId, Guid conversationId);
     }
 }

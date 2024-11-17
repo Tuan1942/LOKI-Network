@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -22,15 +23,17 @@ namespace LOKI_Network.Controllers
     {
         private readonly IUserService _userService;
         private readonly IConfiguration _configuration;
+        private readonly WebSocketService _webSocketService;
 
-        public UserController(IUserService userService, IConfiguration configuration)
+        public UserController(IUserService userService, IConfiguration configuration, WebSocketService webSocketService)
         {
             _userService = userService;
             _configuration = configuration;
+            _webSocketService = webSocketService;
         }
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] UserDTO user)
+        public async Task<IActionResult> Register([FromBody] UserDTO user)
         {
             try
             {
@@ -39,13 +42,13 @@ namespace LOKI_Network.Controllers
                     return BadRequest();
                 }
 
-                var u = _userService.GetUser(user.Username);
+                var u = await _userService.GetUser(user.Username);
                 if (u != null)
                 {
                     return Problem("Username already existed.");
                 }
 
-                _userService.AddUser(user);
+                await _userService.AddUser(user);
 
                 return Ok(new { user.Username });
             }
@@ -65,6 +68,16 @@ namespace LOKI_Network.Controllers
             }
 
             var token = "Bearer " + _userService.GenerateJwtToken(u, _configuration);
+            if (HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+
+                // Add WebSocket to active connections
+                _webSocketService.AddConnection(u.UserId, webSocket);
+
+                // Start a listener to keep the connection alive or handle messages
+                await HandleWebSocketConnection(u.UserId, webSocket);
+            }
             return Ok(new { token });
         }
 
@@ -78,6 +91,20 @@ namespace LOKI_Network.Controllers
             var roles = HttpContext.User.FindAll(ClaimTypes.Role)?.Select(c => c.Value).ToList();
 
             return Ok(user);
+        }
+        private async Task HandleWebSocketConnection(Guid userId, WebSocket webSocket)
+        {
+            var buffer = new byte[1024 * 4];
+            while (webSocket.State == WebSocketState.Open)
+            {
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+                    _webSocketService.RemoveConnection(userId); // Remove connection on close
+                }
+            }
         }
     }
 }
