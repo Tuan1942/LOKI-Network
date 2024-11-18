@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LOKI Network", "LOKI Network\LOKI Network.csproj", "{7B3D4F78-8A00-451D-8D93-39FF9A5EA051}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOKI Network", "LOKI Network\LOKI Network.csproj", "{7B3D4F78-8A00-451D-8D93-39FF9A5EA051}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LOKI Client", "LOKI Client\LOKI Client.csproj", "{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{7B3D4F78-8A00-451D-8D93-39FF9A5EA051}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B3D4F78-8A00-451D-8D93-39FF9A5EA051}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B3D4F78-8A00-451D-8D93-39FF9A5EA051}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
