@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:vc="clr-namespace:LOKI_Client.UI.View.Converters"
-                    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" xmlns:i="http://schemas.microsoft.com/xaml/behaviors">
+                    xmlns:vc="clr-namespace:LOKI_Client.UIs.Views.Converters"
+                    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" 
+                    xmlns:i="http://schemas.microsoft.com/xaml/behaviors">
     <vc:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
     <Style x:Key="CircularCheckBoxStyle" TargetType="CheckBox">

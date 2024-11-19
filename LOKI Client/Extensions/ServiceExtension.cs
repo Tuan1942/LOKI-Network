@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using LOKI_Client.ApiClients.Interfaces;
+using LOKI_Client.ApiClients.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 
 namespace LOKI_Client.Extensions
@@ -15,16 +17,16 @@ namespace LOKI_Client.Extensions
             //services.AddSingleton<LogoutViewModel>();
             //services.AddSingleton<MainSettingViewModel>();
             //services.AddSingleton<LoginViewModel>();
-            services.AddHttpClient("DSApiClient", client =>
+            services.AddHttpClient("LokiClient", client =>
             {
-                client.BaseAddress = new Uri("https://youtube.com");
+                client.BaseAddress = new Uri("https://localhost:3000/");
             });
-            //services.AddSingleton<ISettingService, SettingService>(provider =>
-            //{
-            //    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
-            //    var client = httpClientFactory.CreateClient("DSApiClient");
-            //    return new SettingService(client);
-            //});
+            services.AddSingleton<IUserService, UserService>(provider =>
+            {
+                var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+                var client = httpClientFactory.CreateClient("LokiClient");
+                return new UserService(client);
+            });
         }
     }
 }

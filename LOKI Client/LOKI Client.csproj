@@ -10,10 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="ApiClient\Interface\" />
-    <Folder Include="ApiClient\Service\" />
     <Folder Include="Resources\" />
-    <Folder Include="UI\ViewModel\CommonComponents\" />
+    <Folder Include="UIs\ViewModels\CommonComponents\" />
   </ItemGroup>
 
   <ItemGroup>

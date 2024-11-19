@@ -1,4 +1,4 @@
-﻿using LOKI_Client.Dictionary;
+﻿using LOKI_Client.Dictionaries;
 using LOKI_Client.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Configuration;

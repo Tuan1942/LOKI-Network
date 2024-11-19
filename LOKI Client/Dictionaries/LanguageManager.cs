@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 
-namespace LOKI_Client.Dictionary
+namespace LOKI_Client.Dictionaries
 {
     public class LanguageManager
     {

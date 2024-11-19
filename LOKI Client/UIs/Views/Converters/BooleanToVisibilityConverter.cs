@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LOKI_Client.UI.View.Converters
+namespace LOKI_Client.UIs.Views.Converters
 {
     class BooleanToVisibilityConverter
     {
