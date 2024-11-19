@@ -6,37 +6,80 @@ namespace LOKI_Network.Services
 {
     public class WebSocketService
     {
-        private readonly ConcurrentDictionary<Guid, WebSocket> _activeConnections = new();
+        private readonly ConcurrentDictionary<Guid, List<WebSocket>> _userConnections = new();
 
+        // Add a new WebSocket connection for a user
         public void AddConnection(Guid userId, WebSocket webSocket)
         {
-            _activeConnections[userId] = webSocket;
-        }
-
-        public void RemoveConnection(Guid userId)
-        {
-            _activeConnections.TryRemove(userId, out _);
-        }
-
-        public async Task BroadcastMessageAsync(Guid conversationId, string message)
-        {
-            // Retrieve all participant connections in this conversation
-            var participantIds = GetParticipantIdsInConversation(conversationId); // Assuming a helper to fetch these
-
-            foreach (var userId in participantIds)
+            if (!_userConnections.ContainsKey(userId))
             {
-                if (_activeConnections.TryGetValue(userId, out var webSocket) && webSocket.State == WebSocketState.Open)
+                _userConnections[userId] = new List<WebSocket>();
+            }
+
+            _userConnections[userId].Add(webSocket);
+        }
+
+        // Remove a WebSocket connection for a user
+        public void RemoveConnection(Guid userId, WebSocket webSocket)
+        {
+            if (_userConnections.TryGetValue(userId, out var connections))
+            {
+                connections.Remove(webSocket);
+                if (!connections.Any())
                 {
-                    var buffer = Encoding.UTF8.GetBytes(message);
-                    await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                    _userConnections.TryRemove(userId, out _);
                 }
             }
         }
 
-        private List<Guid> GetParticipantIdsInConversation(Guid conversationId)
+        // Broadcast a message to all WebSocket connections for a user
+        public async Task SendMessageToUserAsync(Guid userId, string message)
         {
-            // Logic to retrieve participant Ids for this conversation
-            return null;
+            if (_userConnections.TryGetValue(userId, out var connections))
+            {
+                var buffer = Encoding.UTF8.GetBytes(message);
+                var tasks = connections.Where(ws => ws.State == WebSocketState.Open)
+                                        .Select(ws => ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None));
+
+                await Task.WhenAll(tasks);
+            }
+        }
+
+        // Broadcast a message to all participants in a conversation
+        public async Task BroadcastMessageAsync(Guid conversationId, string message, Func<Guid, List<Guid>> getParticipantIds)
+        {
+            var participantIds = getParticipantIds(conversationId);
+
+            foreach (var userId in participantIds)
+            {
+                await SendMessageToUserAsync(userId, message);
+            }
+        }
+
+        // Handle incoming messages for a specific WebSocket
+        public async Task ListenToWebSocketAsync(Guid userId, WebSocket webSocket)
+        {
+            var buffer = new byte[1024 * 4];
+
+            while (webSocket.State == WebSocketState.Open)
+            {
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+                if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    Console.WriteLine($"Received message from {userId}: {message}");
+
+                    // Example: Echo the message back to the user
+                    await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes($"Echo: {message}")), WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                else if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    Console.WriteLine($"WebSocket closed by {userId}");
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+                    RemoveConnection(userId, webSocket);
+                }
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ namespace LOKI_Client
         private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
-            services.InJectDependencies();
+            services.InjectDependencies();
             return services.BuildServiceProvider();
         }
     }

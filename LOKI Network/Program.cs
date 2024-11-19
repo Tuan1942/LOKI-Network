@@ -1,10 +1,11 @@
 using LOKI_Network.DbContexts;
 using LOKI_Network.Interface;
+using LOKI_Network.Middleware;
 using LOKI_Network.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Net.WebSockets;
 using System.Security.Claims;
 using System.Text;
 
@@ -64,6 +65,27 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Websocket
+app.UseWebSockets();
+app.UseMiddleware<WebSocketMiddleware>();
+//app.Use(async (context, next) =>
+//{
+//    // Handle WebSocket connections
+//    if (context.WebSockets.IsWebSocketRequest)
+//    {
+//        var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+//        // Handle the WebSocket connection
+//        await HandleWebSocketConnection(webSocket);
+//    }
+//    else
+//    {
+//        // Handle non-WebSocket requests
+//        await next();
+//    }
+//});
+
+
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -77,3 +99,40 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+async Task HandleWebSocketConnection(WebSocket webSocket)
+{
+    var buffer = new byte[1024 * 4];
+
+    while (webSocket.State == WebSocketState.Open)
+    {
+        try
+        {
+            // Receive messages from the WebSocket
+            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+            if (result.MessageType == WebSocketMessageType.Close)
+            {
+                // Close the WebSocket connection
+                await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+            }
+            else if (result.MessageType == WebSocketMessageType.Text)
+            {
+                // Process the received message
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                Console.WriteLine($"Received message: {message}");
+
+                // Optionally, send a response back
+                var responseMessage = Encoding.UTF8.GetBytes("Message received");
+                await webSocket.SendAsync(new ArraySegment<byte>(responseMessage), WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"WebSocket error: {ex.Message}");
+            break;
+        }
+    }
+
+    webSocket.Dispose();
+}

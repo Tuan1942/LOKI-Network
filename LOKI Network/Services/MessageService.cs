@@ -71,7 +71,7 @@ public class MessageService : IMessageService
             });
         }
         await _dbContext.SaveChangesAsync();
-        await _webSocketService.BroadcastMessageAsync(conversationId, $"New message from {senderId}");
+        //await _webSocketService.BroadcastMessageAsync(conversationId, $"New message from {senderId}");
         return true;
     }
 

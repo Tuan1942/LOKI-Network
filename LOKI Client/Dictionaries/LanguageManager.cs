@@ -12,7 +12,7 @@ namespace LOKI_Client.Dictionaries
 
         public void SetLanguage(string languageCode)
         {
-            string resourcePath = $"Dictionary/{languageCode}.xaml";
+            string resourcePath = $"Dictionaries/{languageCode}.xaml";
             var dictionary = new ResourceDictionary { Source = new Uri(resourcePath, UriKind.Relative) };
 
             // Remove the previous dictionary if any

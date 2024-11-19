@@ -7,6 +7,14 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <TextBlock Text="Username:" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="50,50,0,0" />
+        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="150,50,0,0" Width="200" />
 
+        <TextBlock Text="Password:" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="50,100,0,0" />
+        <PasswordBox PasswordChanged="PasswordBox_PasswordChanged" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="150,100,0,0" Width="200">
+        </PasswordBox>
+
+        <Button Content="Login" Command="{Binding LoginCommand}" Width="100" Height="30" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,170,0,0" />
+        <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Foreground="Red" />
     </Grid>
 </Window>

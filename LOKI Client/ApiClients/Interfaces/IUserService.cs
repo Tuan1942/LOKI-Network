@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LOKI_Client.ApiClients.Interfaces
 {
-    internal interface IUserService
+    public interface IUserService
     {
         Task<string> Login(User user);
         Task<bool> Register(User user);

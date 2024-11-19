@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using LOKI_Client.UIs.ViewModels.Account;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,6 +20,15 @@ namespace LOKI_Client
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = App.Current.Services.GetService(typeof(LoginViewModel));
+        }
+
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel viewModel && sender is PasswordBox passwordBox)
+            {
+                viewModel.Password = passwordBox.Password;
+            }
         }
     }
 }

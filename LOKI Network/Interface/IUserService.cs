@@ -12,5 +12,6 @@ namespace LOKI_Network.Interface
         Task<User> GetUser(string username);
         bool VerifyPassword(string enteredPassword, string storedHash);
         string GenerateJwtToken(User user, IConfiguration configuration);
+        static Task<User?> ValidateJwtToken(string token, IConfiguration configuration);
     }
 }

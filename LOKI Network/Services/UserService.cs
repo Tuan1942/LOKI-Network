@@ -26,7 +26,7 @@ namespace LOKI_Network.Services
                 var u = new User
                 {
                     Username = user.Username,
-                    PasswordHash = HashPassword(user.PasswordHash),
+                    PasswordHash = HashPassword(user.Password),
                     Email = user.Email,
                     Gender = user.Gender,
                     CreatedDate = DateTime.Now
@@ -47,7 +47,7 @@ namespace LOKI_Network.Services
             u.Username = user.Username;
             u.Gender = user.Gender;
             u.Email = user.Email;
-            u.PasswordHash = HashPassword(user.PasswordHash);
+            u.PasswordHash = HashPassword(user.Password);
             await _context.SaveChangesAsync();
         }
 
@@ -124,5 +124,46 @@ namespace LOKI_Network.Services
         //    return roles;
         //}
 
+        public static async Task<User?> ValidateJwtToken(string token, IConfiguration configuration)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]);
+
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = configuration["Jwt:Audience"],
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+                if (validatedToken is not JwtSecurityToken jwtToken ||
+                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return null; // Invalid token
+                }
+
+                var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var usernameClaim = principal.FindFirst(ClaimTypes.Name)?.Value;
+
+                if (Guid.TryParse(userIdClaim, out var userId) && !string.IsNullOrEmpty(usernameClaim))
+                {
+                    return await _context.Users.FindAsync(userIdClaim);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

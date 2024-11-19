@@ -62,22 +62,12 @@ namespace LOKI_Network.Controllers
         public async Task<IActionResult> Login([FromBody] UserDTO user)
         {
             var u = await _userService.GetUser(user.Username);
-            if (u == null || !_userService.VerifyPassword(user.PasswordHash, u.PasswordHash))
+            if (u == null || !_userService.VerifyPassword(user.Password, u.PasswordHash))
             {
                 return Unauthorized();
             }
 
             var token = "Bearer " + _userService.GenerateJwtToken(u, _configuration);
-            if (HttpContext.WebSockets.IsWebSocketRequest)
-            {
-                var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-
-                // Add WebSocket to active connections
-                _webSocketService.AddConnection(u.UserId, webSocket);
-
-                // Start a listener to keep the connection alive or handle messages
-                await HandleWebSocketConnection(u.UserId, webSocket);
-            }
             return Ok(new { token });
         }
 
@@ -91,20 +81,6 @@ namespace LOKI_Network.Controllers
             var roles = HttpContext.User.FindAll(ClaimTypes.Role)?.Select(c => c.Value).ToList();
 
             return Ok(user);
-        }
-        private async Task HandleWebSocketConnection(Guid userId, WebSocket webSocket)
-        {
-            var buffer = new byte[1024 * 4];
-            while (webSocket.State == WebSocketState.Open)
-            {
-                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
-                    _webSocketService.RemoveConnection(userId); // Remove connection on close
-                }
-            }
         }
     }
 }
