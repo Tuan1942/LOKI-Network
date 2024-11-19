@@ -59,14 +59,30 @@ namespace LOKI_Network.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<User> GetUser(Guid id)
+        public async Task<UserDTO> GetUser(Guid id)
         {
-            return await _context.Users.FindAsync(id);
+            var user = await _context.Users.FindAsync(id);
+            return new UserDTO
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Email,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Gender = user.Gender
+            };
         }
 
-        public async Task<User> GetUser(string username)
+        public async Task<UserDTO> GetUser(string username)
         {
-            return _context.Users.FirstOrDefault(u => u.Username == username);
+            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            return new UserDTO
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Email,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Gender = user.Gender
+            };
         }
 
         public string HashPassword(string password)
@@ -78,92 +94,12 @@ namespace LOKI_Network.Services
             }
         }
 
-        public bool VerifyPassword(string enteredPassword, string storedHash)
+        public bool VerifyPassword(UserDTO user)
         {
-            var enteredHash = HashPassword(enteredPassword);
-            return enteredHash == storedHash;
+            var u = _context.Users.FirstOrDefault(u => u.Username == user.Username);
+            var enteredHash = HashPassword(user.Password);
+            return enteredHash == u.PasswordHash;
         }
 
-        public string GenerateJwtToken(User user, IConfiguration configuration)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username)
-            };
-
-            //var userRoles = GetUserRoles(user.UserId);
-
-            //foreach (var role in userRoles)
-            //{
-            //    claims.Add(new Claim(ClaimTypes.Role, role));
-            //}
-
-            var token = new JwtSecurityToken(
-                issuer: configuration["Jwt:Issuer"],
-                audience: configuration["Jwt:Audience"],
-                claims: claims,
-                notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddHours(16),
-                signingCredentials: credentials
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-        //private List<string> GetUserRoles(int userId)
-        //{
-        //    var roles = new List<string>();
-        //    var userRoles = _context.UserRoles.Where(ur => ur.UserId == userId).ToList();
-        //    foreach (var userRole in userRoles)
-        //    {
-        //        roles.Add(_context.Roles.First(r => r.Id == userRole.RoleId).Name);
-        //    }
-        //    return roles;
-        //}
-
-        public static async Task<User?> ValidateJwtToken(string token, IConfiguration configuration)
-        {
-            try
-            {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]);
-
-                var validationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = true,
-                    ValidIssuer = configuration["Jwt:Issuer"],
-                    ValidateAudience = true,
-                    ValidAudience = configuration["Jwt:Audience"],
-                    ClockSkew = TimeSpan.Zero
-                };
-
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
-
-                if (validatedToken is not JwtSecurityToken jwtToken ||
-                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return null; // Invalid token
-                }
-
-                var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var usernameClaim = principal.FindFirst(ClaimTypes.Name)?.Value;
-
-                if (Guid.TryParse(userIdClaim, out var userId) && !string.IsNullOrEmpty(usernameClaim))
-                {
-                    return await _context.Users.FindAsync(userIdClaim);
-                }
-
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
     }
 }

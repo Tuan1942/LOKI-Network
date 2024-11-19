@@ -22,7 +22,7 @@ namespace LOKI_Client.ApiClients.Services
             _webSocket = new ClientWebSocket();
 
             // Add the Authorization header with the token
-            _webSocket.Options.SetRequestHeader("Authorization", $"Bearer {token}");
+            _webSocket.Options.SetRequestHeader("Authorization", $"{token}");
 
             try
             {

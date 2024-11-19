@@ -7,7 +7,6 @@ namespace LOKI_Network.Services
     public class WebSocketService
     {
         private readonly ConcurrentDictionary<Guid, List<WebSocket>> _userConnections = new();
-
         // Add a new WebSocket connection for a user
         public void AddConnection(Guid userId, WebSocket webSocket)
         {

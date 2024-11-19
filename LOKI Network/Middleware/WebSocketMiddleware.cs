@@ -1,4 +1,6 @@
 ﻿using LOKI_Network.DbContexts;
+using LOKI_Network.Helpers;
+using LOKI_Network.Interface;
 using LOKI_Network.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -27,19 +29,21 @@ namespace LOKI_Network.Middleware
             if (context.WebSockets.IsWebSocketRequest)
             {
                 var token = context.Request.Headers["Authorization"].ToString();
-                var user = await UserService.ValidateJwtToken(token, _configuration);
-                if (user == null)  // Validate token
+
+                var jwtHelper = new JwtHelper(_configuration);
+                var user = await jwtHelper.ValidateJwtToken(token, _configuration);
+                var userId = user.UserId;
+                if (user == null || userId == null)  // Validate token
                 {
                     context.Response.StatusCode = 401; // Unauthorized
                     return;
                 }
 
                 var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                var userId = user.UserId;
 
-                _webSocketService.AddConnection(userId, webSocket);
+                _webSocketService.AddConnection((Guid)userId, webSocket);
 
-                await HandleWebSocketConnection(webSocket, userId);
+                await HandleWebSocketConnection(webSocket, (Guid)userId);
             }
             else
             {

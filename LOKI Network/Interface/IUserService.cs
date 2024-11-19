@@ -8,10 +8,10 @@ namespace LOKI_Network.Interface
         Task AddUser(UserDTO user);
         Task RemoveUser(Guid userId);
         Task UpdateUser(UserDTO user);
-        Task<User> GetUser(Guid id);
-        Task<User> GetUser(string username);
-        bool VerifyPassword(string enteredPassword, string storedHash);
-        string GenerateJwtToken(User user, IConfiguration configuration);
-        static Task<User?> ValidateJwtToken(string token, IConfiguration configuration);
+        Task<UserDTO> GetUser(Guid id);
+        Task<UserDTO> GetUser(string username);
+        bool VerifyPassword(UserDTO user);
+        //string GenerateJwtToken(UserDTO user, IConfiguration configuration);
+        //Task<UserDTO> ValidateJwtToken(string token, IConfiguration configuration);
     }
 }

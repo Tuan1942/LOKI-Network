@@ -28,6 +28,7 @@ namespace LOKI_Client.Extensions
                 return new UserService(client);
             });
             //services.AddTransient<MainWindow>();
+            services.AddSingleton(new WebSocketService(new Uri("wss://localhost:3000/ws")));
         }
     }
 }

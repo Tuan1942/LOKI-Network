@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LOKI_Client.ApiClients.Interfaces;
+using LOKI_Client.ApiClients.Services;
 using LOKI_Client.Models.DTOs;
 using System;
 using System.Net.WebSockets;
@@ -13,8 +14,7 @@ namespace LOKI_Client.UIs.ViewModels.Account
     public partial class LoginViewModel : ObservableObject
     {
         private readonly IUserService _userService;
-        private ClientWebSocket? _webSocket;
-        private string _webSocketUri = "wss://localhost:3000/ws";
+        private readonly WebSocketService _webSocketService;
 
         [ObservableProperty]
         private string username;
@@ -35,6 +35,12 @@ namespace LOKI_Client.UIs.ViewModels.Account
             _userService = userService;
         }
 
+        public LoginViewModel(IUserService userService, WebSocketService webSocketService)
+        {
+            _userService = userService;
+            _webSocketService = webSocketService;
+        }
+
         private async Task LoginAsync()
         {
             IsLoading = true;
@@ -48,7 +54,8 @@ namespace LOKI_Client.UIs.ViewModels.Account
                 if (!string.IsNullOrEmpty(token))
                 {
                     StatusMessage = "Login successful! Connecting to WebSocket...";
-                    await ConnectWebSocket(token); // Connect to WebSocket after successful login
+                    await _webSocketService.ConnectAsync(token);
+                    await _webSocketService.ReceiveMessagesAsync();
                 }
                 else
                 {
@@ -65,94 +72,9 @@ namespace LOKI_Client.UIs.ViewModels.Account
             }
         }
 
-        private async Task ConnectWebSocket(string token)
-        {
-            _webSocket = new ClientWebSocket();
-
-            try
-            {
-                // Add the Authorization header with the token
-                _webSocket.Options.SetRequestHeader("Authorization", $"Bearer {token}");
-
-                // Build the WebSocket URI
-                var webSocketUri = new Uri($"{_webSocketUri}"); // Replace _webSocketUri with your WebSocket server URI
-
-                // Connect to the WebSocket server
-                await _webSocket.ConnectAsync(webSocketUri, CancellationToken.None);
-
-                StatusMessage = "Connected to WebSocket!";
-
-                // Start receiving messages from the WebSocket server
-                await ReceiveMessagesAsync();
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"WebSocket connection failed: {ex.Message}";
-            }
-        }
-
-        private async Task ReceiveMessagesAsync()
-        {
-            var buffer = new byte[1024 * 4];
-
-            try
-            {
-                while (_webSocket.State == WebSocketState.Open)
-                {
-                    var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
-                    if (result.MessageType == WebSocketMessageType.Close)
-                    {
-                        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
-                        StatusMessage = "WebSocket connection closed.";
-                    }
-                    else if (result.MessageType == WebSocketMessageType.Text)
-                    {
-                        var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        HandleMessage(message); // Handle incoming message
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-            }
-        }
-
-        private void HandleMessage(string message)
-        {
-            StatusMessage = message;
-            // Assuming the message is in JSON format, deserialize it (e.g., using JSON.NET or System.Text.Json)
-            //var messageObj = System.Text.Json.JsonSerializer.Deserialize<WebSocketMessage>(message);
-            //switch (messageObj?.Type)
-            //{
-            //    case "refresh":
-            //        // Handle refresh action
-            //        StatusMessage = "Refreshing messages...";
-            //        break;
-
-            //    case "notification":
-            //        // Handle notification
-            //        StatusMessage = $"Notification: {messageObj.Content}";
-            //        break;
-
-            //    default:
-            //        StatusMessage = $"Unknown message type: {messageObj?.Type}";
-            //        break;
-            //}
-        }
         public async Task SendMessageAsync(string message)
         {
-            if (_webSocket?.State == WebSocketState.Open)
-            {
-                var buffer = Encoding.UTF8.GetBytes(message);
-                var segment = new ArraySegment<byte>(buffer);
-                await _webSocket.SendAsync(segment, WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
-                Console.WriteLine($"Sent message: {message}");
-            }
-            else
-            {
-                Console.WriteLine("WebSocket is not connected.");
-            }
+            await _webSocketService.SendMessageAsync(message);
         }
     }
 
