@@ -13,6 +13,7 @@ namespace LOKI_Client.Models.DTOs
         public string? Email { get; set; }
         public string Password { get; set; }
         public string? ProfilePictureUrl { get; set; }
+        public string Token { get; set; }
         public bool Gender { get; set; }
     }
 }

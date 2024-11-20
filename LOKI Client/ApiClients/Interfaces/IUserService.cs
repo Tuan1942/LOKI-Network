@@ -9,7 +9,7 @@ namespace LOKI_Client.ApiClients.Interfaces
 {
     public interface IUserService
     {
-        Task<string> Login(User user);
+        Task<User> Login(User user);
         Task<bool> Register(User user);
     }
 }

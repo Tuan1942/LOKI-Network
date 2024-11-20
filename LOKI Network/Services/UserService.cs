@@ -75,6 +75,7 @@ namespace LOKI_Network.Services
         public async Task<UserDTO> GetUser(string username)
         {
             var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            if (user == null) return null;
             return new UserDTO
             {
                 UserId = user.UserId,
@@ -97,6 +98,7 @@ namespace LOKI_Network.Services
         public bool VerifyPassword(UserDTO user)
         {
             var u = _context.Users.FirstOrDefault(u => u.Username == user.Username);
+            if (u == null) return false;
             var enteredHash = HashPassword(user.Password);
             return enteredHash == u.PasswordHash;
         }

@@ -10,7 +10,7 @@ namespace LOKI_Network.DTOs
         public string Password { get; set; }
         public string? ProfilePictureUrl { get; set; }
         public bool Gender { get; set; }
-
+        public string Token { get; set; }
         public UserDTO() { }
     }
 }

@@ -16,12 +16,12 @@ namespace LOKI_Client.ApiClients.Services
             _httpClient = httpClient;
         }
 
-        public async Task<string> Login(User user)  
+        public async Task<User> Login(User user)  
         {
             try
             {
-                var response = await PostAsync<User, TokenResponse>("user/Login", user);
-                return response?.Token;
+                var response = await PostAsync<User, User>("user/Login", user);
+                return response;
             }
             catch (Exception ex)
             {

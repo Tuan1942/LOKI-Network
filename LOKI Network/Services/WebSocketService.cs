@@ -1,6 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using LOKI_Network.DTOs;
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 
 namespace LOKI_Network.Services
 {
@@ -32,11 +34,12 @@ namespace LOKI_Network.Services
         }
 
         // Broadcast a message to all WebSocket connections for a user
-        public async Task SendMessageToUserAsync(Guid userId, string message)
+        public async Task SendMessageToUserAsync(Guid userId, WebSocketMessage message)
         {
             if (_userConnections.TryGetValue(userId, out var connections))
             {
-                var buffer = Encoding.UTF8.GetBytes(message);
+                var content = JsonSerializer.Serialize(message);
+                var buffer = Encoding.UTF8.GetBytes(content);
                 var tasks = connections.Where(ws => ws.State == WebSocketState.Open)
                                         .Select(ws => ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None));
 
@@ -51,7 +54,7 @@ namespace LOKI_Network.Services
 
             foreach (var userId in participantIds)
             {
-                await SendMessageToUserAsync(userId, message);
+                await SendMessageToUserAsync(userId, new WebSocketMessage { });
             }
         }
 

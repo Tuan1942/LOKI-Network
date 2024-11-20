@@ -1,8 +1,10 @@
-﻿using System;
+﻿using LOKI_Client.Models.DTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace LOKI_Client.ApiClients.Services
@@ -11,6 +13,25 @@ namespace LOKI_Client.ApiClients.Services
     {
         private readonly Uri _baseWebSocketUri;
         private ClientWebSocket? _webSocket;
+        private User _user;
+        public User User
+        {  
+            get 
+            { 
+                return new User
+                {
+                    UserId = _user.UserId,
+                    Username = _user.Username,
+                    Email = _user.Email,
+                    Gender = _user.Gender,
+                    ProfilePictureUrl = _user.ProfilePictureUrl,
+                }; 
+            }
+            set
+            {
+                _user = value;
+            }
+        }
 
         public WebSocketService(Uri baseWebSocketUri)
         {
@@ -39,6 +60,36 @@ namespace LOKI_Client.ApiClients.Services
             }
         }
 
+        public async Task CloseAsync()
+        {
+            if (_webSocket?.State == WebSocketState.Open || _webSocket?.State == WebSocketState.CloseReceived)
+            {
+                try
+                {
+                    // Send a close frame to the server
+                    await _webSocket.CloseAsync(
+                        WebSocketCloseStatus.NormalClosure,
+                        "Client closed the connection.",
+                        CancellationToken.None);
+
+                    Console.WriteLine("WebSocket closed gracefully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error during WebSocket close: {ex.Message}");
+                }
+                finally
+                {
+                    _webSocket?.Dispose();
+                    _webSocket = null; // Ensure the WebSocket instance is disposed
+                }
+            }
+            else
+            {
+                Console.WriteLine("WebSocket is not connected or already closed.");
+            }
+        }
+        
         public async Task ReceiveMessagesAsync()
         {
             var buffer = new byte[1024 * 4];
@@ -57,8 +108,7 @@ namespace LOKI_Client.ApiClients.Services
                     else if (result.MessageType == WebSocketMessageType.Text)
                     {
                         var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        Console.WriteLine($"Message received: {message}");
-                        // Here you can handle incoming messages as needed
+                        HandleMessage(message);
                     }
                 }
             }
@@ -80,6 +130,29 @@ namespace LOKI_Client.ApiClients.Services
             else
             {
                 Console.WriteLine("WebSocket is not connected.");
+            }
+        }
+        private void HandleMessage(string message)
+        {
+            try
+            {
+                var messageObj = JsonSerializer.Deserialize<WebSocketMessage>(message);
+
+                switch (messageObj?.Type)
+                {
+                    case "refresh":
+                        break;
+
+                    case "notification":
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                return;
             }
         }
     }

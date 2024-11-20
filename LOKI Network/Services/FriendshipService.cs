@@ -1,4 +1,5 @@
 ﻿using LOKI_Network.DbContexts;
+using LOKI_Network.DTOs;
 using LOKI_Network.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -85,7 +86,7 @@ namespace LOKI_Network.Services
                 .ToListAsync();
         }
 
-        public async Task<List<User>> GetAllFriends(Guid userId)
+        public async Task<List<UserDTO>> GetAllFriends(Guid userId)
         {
             // Retrieve all accepted friendships where the user is either the sender or the receiver
             var userList = await _lokiContext.Friendships
@@ -94,8 +95,16 @@ namespace LOKI_Network.Services
                 f.Status == FriendshipStatus.Accepted)
                 .Select(f => f.UserId == userId ? f.Friend : f.User) // Selects the friend based on relationship
                 .ToListAsync();
+            var userDtoList = userList.Select(user => new UserDTO
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Email,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Gender = user.Gender
 
-            return userList;
+            });
+            return userDtoList.ToList();
         }
 
         public async Task UnBlock(Guid sender, Guid receiver)

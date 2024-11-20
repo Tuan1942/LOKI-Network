@@ -1,12 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using LOKI_Client.ApiClients.Interfaces;
-using LOKI_Client.ApiClients.Services;
+using LOKI_Client.Models;
 using LOKI_Client.Models.DTOs;
 using System;
-using System.Net.WebSockets;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace LOKI_Client.UIs.ViewModels.Account
@@ -14,7 +16,6 @@ namespace LOKI_Client.UIs.ViewModels.Account
     public partial class LoginViewModel : ObservableObject
     {
         private readonly IUserService _userService;
-        private readonly WebSocketService _webSocketService;
 
         [ObservableProperty]
         private string username;
@@ -28,34 +29,30 @@ namespace LOKI_Client.UIs.ViewModels.Account
         [ObservableProperty]
         private bool isLoading;
 
-        public RelayCommand LoginCommand => new RelayCommand(async () => await LoginAsync());
+        [ObservableProperty]
+        private bool loginPageVisible;
 
         public LoginViewModel(IUserService userService)
         {
             _userService = userService;
+            WeakReferenceMessenger.Default.Register<LoginRequest>(this, async (r, action) => { await LoginAsync(action.User); });
         }
 
-        public LoginViewModel(IUserService userService, WebSocketService webSocketService)
-        {
-            _userService = userService;
-            _webSocketService = webSocketService;
-        }
+        public RelayCommand LoginCommand => new RelayCommand(async () => await LoginAsync(new User { Username = Username, Password = Password }));
+        public RelayCommand RegisterCommand => new RelayCommand(async () => await RegisterAsync(new User { Username = Username, Password = Password }));
+        public RelayCommand SwapPageCommand => new RelayCommand(SwapPage);
 
-        private async Task LoginAsync()
+        private async Task RegisterAsync(User user)
         {
             IsLoading = true;
             StatusMessage = "Logging in...";
 
             try
             {
-                var user = new User { Username = Username, Password = Password };
-                var token = await _userService.Login(user);
-
-                if (!string.IsNullOrEmpty(token))
+                if (await _userService.Register(user))
                 {
-                    StatusMessage = "Login successful! Connecting to WebSocket...";
-                    await _webSocketService.ConnectAsync(token);
-                    await _webSocketService.ReceiveMessagesAsync();
+                    StatusMessage = "Register successful";
+                    SwapPage();
                 }
                 else
                 {
@@ -72,16 +69,42 @@ namespace LOKI_Client.UIs.ViewModels.Account
             }
         }
 
-        public async Task SendMessageAsync(string message)
+        private void SwapPage()
         {
-            await _webSocketService.SendMessageAsync(message);
+            LoginPageVisible = !LoginPageVisible;
         }
-    }
 
-    // WebSocket message DTO
-    public class WebSocketMessage
-    {
-        public string Type { get; set; }
-        public string Content { get; set; }
+        private async Task LoginAsync(User user)
+        {
+            IsLoading = true;
+            StatusMessage = "Logging in...";
+
+            try
+            {
+                user = await _userService.Login(user);
+
+                if (user != null)
+                {
+                    StatusMessage = "Login successful! Connecting to WebSocket...";
+                    ConnectWebSocket(user);
+                }
+                else
+                {
+                    StatusMessage = "Invalid username or password.";
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        private void ConnectWebSocket(User user)
+        {
+            WeakReferenceMessenger.Default.Send(new ConnectWebSocketRequest(user));
+        }
     }
 }

@@ -67,11 +67,10 @@ namespace LOKI_Network.Controllers
                 return Unauthorized();
             }
             var u = await _userService.GetUser(user.Username);
+            user = new UserDTO { UserId = u.UserId, Username = u.Username, Email = u.Email, Gender = u.Gender, ProfilePictureUrl = u.ProfilePictureUrl };
             var jwtHelper = new JwtHelper(_configuration);
-            var token = jwtHelper.GenerateJwtToken(
-                new UserDTO { UserId = u.UserId, Username = u.Username, Email = u.Email, Gender = u.Gender, ProfilePictureUrl = u.ProfilePictureUrl}, 
-                _configuration);
-            return Ok(new { token });
+            user.Token = jwtHelper.GenerateJwtToken(user, _configuration);
+            return Ok(user);
         }
 
         [HttpGet("info")]
