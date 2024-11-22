@@ -36,9 +36,9 @@
                 
             </Grid>
         </Grid>
-        <!--<Grid Grid.ColumnSpan="2" Visibility="{Binding LoginPageVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Grid.ColumnSpan="2" Visibility="{Binding LoginPageVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid Opacity="0.3" Background="Black"/>
             <Frame Source="../UIs/Views/Account/LoginPage.xaml"/>
-        </Grid>-->
+        </Grid>
     </Grid>
 </Window>

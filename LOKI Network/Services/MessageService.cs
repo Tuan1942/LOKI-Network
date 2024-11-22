@@ -11,9 +11,9 @@ public class MessageService : IMessageService
 {
     private readonly LokiContext _dbContext;
     private readonly IFileService _fileService;
-    private readonly WebSocketService _webSocketService;
+    private readonly IWebSocketService _webSocketService;
 
-    public MessageService(LokiContext lokiContext, IFileService fileService, WebSocketService webSocketService)
+    public MessageService(LokiContext lokiContext, IFileService fileService, IWebSocketService webSocketService)
     {
         _dbContext = lokiContext;
         _fileService = fileService;

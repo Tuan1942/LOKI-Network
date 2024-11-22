@@ -14,10 +14,10 @@ namespace LOKI_Network.Middleware
     public class WebSocketMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly WebSocketService _webSocketService;
+        private readonly IWebSocketService _webSocketService;
         private readonly IConfiguration _configuration;
 
-        public WebSocketMiddleware(RequestDelegate next, WebSocketService webSocketService, IConfiguration configuration)
+        public WebSocketMiddleware(RequestDelegate next, IWebSocketService webSocketService, IConfiguration configuration)
         {
             _next = next;
             _webSocketService = webSocketService;
@@ -34,7 +34,6 @@ namespace LOKI_Network.Middleware
                 {
                     var jwtHelper = new JwtHelper(_configuration);
                     var user = await jwtHelper.ValidateJwtToken(token, _configuration);
-                    Console.WriteLine($"WebSocket connect request: {token}");
 
                     if (user == null || user.UserId == null)  // Validate token
                     {
@@ -46,6 +45,7 @@ namespace LOKI_Network.Middleware
                     var webSocket = await context.WebSockets.AcceptWebSocketAsync();
 
                     _webSocketService.AddConnection((Guid)userId, webSocket);
+                    Console.WriteLine($"WebSocket connected: {token}");
 
                     await HandleWebSocketConnection(webSocket, (Guid)userId);
                 }
