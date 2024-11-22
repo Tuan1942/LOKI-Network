@@ -88,5 +88,11 @@ namespace LOKI_Network.Controllers
 
             return Ok(user);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+            return Ok(await _userService.GetAll());
+        }
     }
 }

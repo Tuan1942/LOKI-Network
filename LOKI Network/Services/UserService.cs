@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace LOKI_Network.Services
 {
@@ -103,5 +104,20 @@ namespace LOKI_Network.Services
             return enteredHash == u.PasswordHash;
         }
 
+        public async Task<List<UserDTO>> GetAll()
+        {
+            var userList = await _context.Users.ToListAsync();
+            return userList.Select(u => new UserDTO
+            {
+                UserId = u.UserId,
+                Username = u.Username,
+                FirstName = u.FirstName,
+                MiddleName = u.MiddleName,
+                LastName = u.LastName,
+                Email = u.Email,
+                Gender = u.Gender,
+                ProfilePictureUrl = u.ProfilePictureUrl
+            }).ToList();
+        }
     }
 }

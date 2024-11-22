@@ -14,19 +14,32 @@ namespace LOKI_Client.Extensions
     {
         public static void InjectDependencies(this IServiceCollection services)
         {
-            // Register ViewModels
+            RegisterViewModels(services);
+
+            RegisterServices(services);
+            //services.AddTransient<MainWindow>();
+        }
+        private static void RegisterViewModels(IServiceCollection services)
+        {
             services.AddSingleton<HomeViewModel>();
             services.AddSingleton<LoginViewModel>();
             services.AddSingleton<ConversationViewModel>();
             services.AddSingleton<MessageViewModel>();
-
+        }
+        private static void RegisterServices(IServiceCollection services)
+        {
             // Configure HttpClient
             services.AddHttpClient("LokiClient", client =>
             {
-                client.BaseAddress = new Uri("https://localhost:3000/"); // Update to your API base URL
+                client.BaseAddress = new Uri("https://localhost:3000/");
             });
 
-            // Register Services
+            services.AddSingleton<IConversationService, ConversationService>(provider =>
+            {
+                var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+                var client = httpClientFactory.CreateClient("LokiClient");
+                return new ConversationService(client);
+            });
             services.AddSingleton<IUserService, UserService>(provider =>
             {
                 var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
@@ -39,7 +52,6 @@ namespace LOKI_Client.Extensions
                 var client = httpClientFactory.CreateClient("LokiClient");
                 return new FriendshipService(client);
             });
-            //services.AddTransient<MainWindow>();
             services.AddSingleton(new WebSocketService(new Uri("wss://localhost:3000/ws")));
         }
     }

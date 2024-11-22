@@ -38,7 +38,7 @@ namespace LOKI_Network.Helpers
                 audience: configuration["Jwt:Audience"],
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddHours(16),
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: credentials
             );
 

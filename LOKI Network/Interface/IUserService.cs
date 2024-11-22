@@ -10,6 +10,7 @@ namespace LOKI_Network.Interface
         Task<UserDTO> GetUser(Guid id);
         Task<UserDTO> GetUser(string username);
         bool VerifyPassword(UserDTO user);
+        Task<List<UserDTO>> GetAll();
         //string GenerateJwtToken(UserDTO user, IConfiguration configuration);
         //Task<UserDTO> ValidateJwtToken(string token, IConfiguration configuration);
     }
