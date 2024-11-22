@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Client.Models;
-using LOKI_Client.Models.DTOs;
+using LOKI_Model.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,11 +38,11 @@ namespace LOKI_Client.UIs.ViewModels.Account
             WeakReferenceMessenger.Default.Register<LoginRequest>(this, async (r, action) => { await LoginAsync(action.User); });
         }
 
-        public RelayCommand LoginCommand => new RelayCommand(async () => await LoginAsync(new User { Username = Username, Password = Password }));
-        public RelayCommand RegisterCommand => new RelayCommand(async () => await RegisterAsync(new User { Username = Username, Password = Password }));
+        public RelayCommand LoginCommand => new RelayCommand(async () => await LoginAsync(new UserDTO { Username = Username, Password = Password }));
+        public RelayCommand RegisterCommand => new RelayCommand(async () => await RegisterAsync(new UserDTO { Username = Username, Password = Password }));
         public RelayCommand SwapPageCommand => new RelayCommand(SwapPage);
 
-        private async Task RegisterAsync(User user)
+        private async Task RegisterAsync(UserDTO user)
         {
             IsLoading = true;
             StatusMessage = "Logging in...";
@@ -74,7 +74,7 @@ namespace LOKI_Client.UIs.ViewModels.Account
             LoginPageVisible = !LoginPageVisible;
         }
 
-        private async Task LoginAsync(User user)
+        private async Task LoginAsync(UserDTO user)
         {
             IsLoading = true;
             StatusMessage = "Logging in...";
@@ -102,7 +102,7 @@ namespace LOKI_Client.UIs.ViewModels.Account
                 IsLoading = false;
             }
         }
-        private void ConnectWebSocket(User user)
+        private void ConnectWebSocket(UserDTO user)
         {
             WeakReferenceMessenger.Default.Send(new ConnectWebSocketRequest(user));
         }

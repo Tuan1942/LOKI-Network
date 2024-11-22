@@ -1,7 +1,8 @@
 ﻿using LOKI_Network.DbContexts;
-using LOKI_Network.DTOs;
+using LOKI_Model.Models;
 using LOKI_Network.Interface;
 using Microsoft.EntityFrameworkCore;
+using LOKI_Model.Enums;
 
 namespace LOKI_Network.Services
 {
@@ -78,11 +79,11 @@ namespace LOKI_Network.Services
             await _lokiContext.SaveChangesAsync();
         }
 
-        public async Task<List<Friendship>> GetAllFriendRequests(Guid userId)
+        public async Task<List<FriendshipDTO>> GetAllFriendRequests(Guid userId)
         {
             // Retrieve all pending friend requests where the user is the receiver
             return await _lokiContext.Friendships
-                .Where(f => f.FriendId == userId && f.Status == FriendshipStatus.Pending)
+                .Where(f => f.FriendId == userId && f.Status == FriendshipStatus.Pending).Select(f => new FriendshipDTO())
                 .ToListAsync();
         }
 
@@ -95,6 +96,7 @@ namespace LOKI_Network.Services
                 f.Status == FriendshipStatus.Accepted)
                 .Select(f => f.UserId == userId ? f.Friend : f.User) // Selects the friend based on relationship
                 .ToListAsync();
+            userList = await _lokiContext.Users.Where(u => u.UserId != userId).ToListAsync();
             var userDtoList = userList.Select(user => new UserDTO
             {
                 UserId = user.UserId,

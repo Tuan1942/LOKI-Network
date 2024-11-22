@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LOKI_Client.Models.DTOs
+namespace LOKI_Model.Models
 {
-    public class WebSocketMessage
+    public class WebSocketMessageDTO
     {
         public string Type { get; set; }
         public string NotificationMessage { get; set; }

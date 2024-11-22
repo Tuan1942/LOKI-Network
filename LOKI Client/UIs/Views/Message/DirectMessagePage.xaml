@@ -1,0 +1,17 @@
+﻿<Page x:Class="LOKI_Client.UIs.Views.Message.DirectMessagePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:LOKI_Client.UIs.Views.Message"
+      mc:Ignorable="d" 
+      Title="DirectMessagePage">
+
+    <ScrollViewer HorizontalAlignment="Stretch" Background="LightGray">
+        <ItemsControl ItemsSource="{Binding Messages}">
+            <ItemsControl.ItemTemplate>
+                <StaticResource ResourceKey="DirectMessageItem" />
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</Page>

@@ -1,7 +1,11 @@
-﻿using LOKI_Network.DbContexts;
+﻿using LOKI_Model.Enums;
+using LOKI_Network.DbContexts;
+using LOKI_Model.Models;
 using LOKI_Network.Interface;
 using LOKI_Network.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
 
 public class MessageService : IMessageService
 {
@@ -16,7 +20,7 @@ public class MessageService : IMessageService
         _webSocketService = webSocketService;
     }
 
-    public async Task<Message> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files)
+    public async Task<Guid> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files)
     {
         var message = new Message
         {
@@ -49,7 +53,7 @@ public class MessageService : IMessageService
         }
 
         await _dbContext.SaveChangesAsync();
-        return message;
+        return message.MessageId;
     }
     public async Task<bool> SendMessageAsync(Guid senderId, Guid messageId, Guid conversationId)
     {
@@ -95,5 +99,11 @@ public class MessageService : IMessageService
         // Delete the message itself
         _dbContext.Messages.Remove(message);
         await _dbContext.SaveChangesAsync();
+    }
+
+    public List<MessageDTO> GetMessagesByConversation(Guid conversationId)
+    {
+        var messages = _dbContext.Messages.Where(m => m.ConversationId == conversationId);
+        return messages?.Select(m => new MessageDTO()).ToList();
     }
 }

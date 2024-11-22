@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Client.ApiClients.Services;
 using LOKI_Client.Models;
-using LOKI_Client.Models.DTOs;
+using LOKI_Model.Models;
 using LOKI_Client.Models.Helper;
 using System;
 using System.Net.WebSockets;
@@ -23,8 +23,8 @@ namespace LOKI_Client.UIs.ViewModels
         #region Properties
 
         private readonly WebSocketService _webSocketService;
-        private User localUser { get; set; }
-        private User LocalUser
+        private UserDTO localUser { get; set; }
+        private UserDTO LocalUser
         {
             get { return localUser; }
             set
@@ -73,7 +73,7 @@ namespace LOKI_Client.UIs.ViewModels
             try
             {
                 var userJson = ApplicationSettingsHelper.GetSetting(nameof(LocalUser));
-                LocalUser = JsonSerializer.Deserialize<User>(userJson);
+                LocalUser = JsonSerializer.Deserialize<UserDTO>(userJson);
                 await ConnectWebSocket(LocalUser);
             }
             catch (Exception ex)
@@ -88,14 +88,17 @@ namespace LOKI_Client.UIs.ViewModels
             await _webSocketService.SendMessageAsync(message);
         }
 
-        private async Task ConnectWebSocket(User user)
+        private async Task ConnectWebSocket(UserDTO user)
         {
             LocalUser = user;
             var content = JsonSerializer.Serialize(localUser);
             ApplicationSettingsHelper.SaveSetting(nameof(LocalUser), content);
 
             await _webSocketService.ConnectAsync(LocalUser.Token);
+            WeakReferenceMessenger.Default.Send(new RefreshFriendListRequest(user.Token));
             await _webSocketService.ReceiveMessagesAsync();
+
+            LocalUser = null;
         }
 
         #endregion

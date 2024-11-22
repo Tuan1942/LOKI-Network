@@ -1,5 +1,4 @@
-﻿using LOKI_Network.DbContexts;
-using LOKI_Network.DTOs;
+﻿using LOKI_Model.Models;
 
 namespace LOKI_Network.Interface
 {
@@ -8,7 +7,7 @@ namespace LOKI_Network.Interface
         Task AddFriendRequest(Guid sender, Guid receiver);
         Task ResponseFriendRequest(Guid sender, Guid friendShipId, bool accepted);
         Task UnFriend(Guid sender, Guid receiver);
-        Task<List<Friendship>> GetAllFriendRequests(Guid userId);
+        Task<List<FriendshipDTO>> GetAllFriendRequests(Guid userId);
         Task<List<UserDTO>> GetAllFriends(Guid userId);
         Task Block(Guid sender, Guid receiver);
         Task UnBlock(Guid sender, Guid receiver);

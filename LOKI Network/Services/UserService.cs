@@ -1,5 +1,5 @@
 ﻿using LOKI_Network.DbContexts;
-using LOKI_Network.DTOs;
+using LOKI_Model.Models;
 using LOKI_Network.Interface;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;

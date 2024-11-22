@@ -1,4 +1,5 @@
 ﻿using LOKI_Client.UIs.ViewModels.Account;
+using LOKI_Client.UIs.ViewModels.Message;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,24 +15,17 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace LOKI_Client.UIs.Views
+namespace LOKI_Client.UIs.Views.Message
 {
     /// <summary>
-    /// Interaction logic for LoginPage.xaml
+    /// Interaction logic for DirectMessagePage.xaml
     /// </summary>
-    public partial class LoginPage : Page
+    public partial class DirectMessagePage : Page
     {
-        public LoginPage()
+        public DirectMessagePage()
         {
             InitializeComponent();
-            DataContext = App.Current.Services.GetService(typeof(LoginViewModel));
-        }
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is LoginViewModel viewModel && sender is PasswordBox passwordBox)
-            {
-                viewModel.Password = passwordBox.Password;
-            }
+            DataContext = App.Current.Services.GetService(typeof(MessageViewModel));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using LOKI_Model.Enums;
 
 namespace LOKI_Network.DbContexts
 {
@@ -91,6 +92,9 @@ namespace LOKI_Network.DbContexts
     {
         public Guid UserId { get; set; } // Primary Key
         public string Username { get; set; }
+        public string? LastName { get; set; }
+        public string? FirstName { get; set; }
+        public string? MiddleName { get; set; }
         public string? Email { get; set; }
         public string PasswordHash { get; set; }
         public string? ProfilePictureUrl { get; set; }
@@ -119,16 +123,11 @@ namespace LOKI_Network.DbContexts
         public User Friend { get; set; }
     }
 
-    public enum FriendshipStatus
-    {
-        Pending,
-        Accepted,
-        Blocked
-    }
 
     public class Conversation
     {
         public Guid ConversationId { get; set; } // Primary Key
+        public string? ConversationName { get; set; }
         public bool IsGroup { get; set; }
         public DateTime CreatedDate { get; set; }
 
@@ -143,6 +142,7 @@ namespace LOKI_Network.DbContexts
         public Guid ConversationId { get; set; } // Foreign Key
         public Guid UserId { get; set; } // Foreign Key
         public DateTime JoinedDate { get; set; }
+        public ParticipantRole Role { get; set; }
 
         // Navigation properties
         public Conversation Conversation { get; set; }
@@ -166,12 +166,6 @@ namespace LOKI_Network.DbContexts
         public ICollection<MessageStatus> MessageStatuses { get; set; }
     }
 
-    public enum MessageType
-    {
-        Text,
-        Media,
-        File
-    }
     public class MessageStatus
     {
         public Guid MessageStatusId { get; set; } // Primary Key
@@ -198,12 +192,6 @@ namespace LOKI_Network.DbContexts
         public User User { get; set; }
     }
 
-    public enum NotificationType
-    {
-        Message,
-        FriendRequest,
-        Mention
-    }
 
     public class UserSettings
     {
@@ -217,11 +205,6 @@ namespace LOKI_Network.DbContexts
         public User User { get; set; }
     }
 
-    public enum Theme
-    {
-        Light,
-        Dark
-    }
     public class Attachment
     {
         public Guid AttachmentId { get; set; } // Primary Key
@@ -235,14 +218,6 @@ namespace LOKI_Network.DbContexts
         public Message Message { get; set; }
     }
 
-    public enum FileType
-    {
-        Image,
-        Video,
-        Audio,
-        Document,
-        Other
-    }
     public class ModifyHistory
     {
         public Guid ModifyHistoryId { get; set; } // Primary Key
@@ -257,10 +232,5 @@ namespace LOKI_Network.DbContexts
         public User User { get; set; }
     }
 
-    public enum EntityType
-    {
-        Message,
-        Profile
-    }
 
 }

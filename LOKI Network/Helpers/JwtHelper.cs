@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using LOKI_Network.DTOs;
+using LOKI_Model.Models;
 
 namespace LOKI_Network.Helpers
 {

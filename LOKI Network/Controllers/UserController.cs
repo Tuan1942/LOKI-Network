@@ -1,6 +1,5 @@
 ﻿using Azure.Identity;
-using LOKI_Network.DbContexts;
-using LOKI_Network.DTOs;
+using LOKI_Model.Models;
 using LOKI_Network.Helpers;
 using LOKI_Network.Interface;
 using LOKI_Network.Services;
@@ -24,13 +23,11 @@ namespace LOKI_Network.Controllers
     {
         private readonly IUserService _userService;
         private readonly IConfiguration _configuration;
-        private readonly WebSocketService _webSocketService;
 
-        public UserController(IUserService userService, IConfiguration configuration, WebSocketService webSocketService)
+        public UserController(IUserService userService, IConfiguration configuration)
         {
             _userService = userService;
             _configuration = configuration;
-            _webSocketService = webSocketService;
         }
 
         [HttpPost("register")]
@@ -62,15 +59,22 @@ namespace LOKI_Network.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserDTO user)
         {
-            if (user == null || !_userService.VerifyPassword(user))
+            try
             {
-                return Unauthorized();
+                if (user == null || !_userService.VerifyPassword(user))
+                {
+                    return Unauthorized();
+                }
+                var u = await _userService.GetUser(user.Username);
+                user = new UserDTO { UserId = u.UserId, Username = u.Username, Email = u.Email, Gender = u.Gender, ProfilePictureUrl = u.ProfilePictureUrl };
+                var jwtHelper = new JwtHelper(_configuration);
+                user.Token = jwtHelper.GenerateJwtToken(user, _configuration);
+                return Ok(user);
             }
-            var u = await _userService.GetUser(user.Username);
-            user = new UserDTO { UserId = u.UserId, Username = u.Username, Email = u.Email, Gender = u.Gender, ProfilePictureUrl = u.ProfilePictureUrl };
-            var jwtHelper = new JwtHelper(_configuration);
-            user.Token = jwtHelper.GenerateJwtToken(user, _configuration);
-            return Ok(user);
+            catch (Exception e)
+            {
+                return Problem(e.Message);
+            }
         }
 
         [HttpGet("info")]

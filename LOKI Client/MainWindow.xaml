@@ -5,18 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LOKI_Client"
         mc:Ignorable="d"
-        xmlns:vc="clr-namespace:LOKI_Client.UIs.Views.Converters"
+        xmlns:vc="clr-namespace:LOKI_Client.UIs.Converters"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-       Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="600" Width="1000"
+        MinHeight="600" MinWidth="1000">
     <Window.Resources>
         <vc:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
     <Grid>
-        <Grid>
-            <!--<Grid Visibility="{Binding LoginPageVisible, Converter={StaticResource BooleanToVisibilityConverter}}">-->
-            <Grid Opacity="0.3" Background="Black"/>
-            <Frame Source="../UIs/Views/LoginPage.xaml"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Background="red" Visibility="Visible" Orientation="Horizontal" >
+            <StackPanel Width="50" Background="Bisque"></StackPanel>
+            <Grid Visibility="Visible">
+                <Frame Source="../UIs/Views/Conversation/ConversationPage.xaml"/>
+            </Grid>
+            <Grid Background="Black" HorizontalAlignment="Stretch">
+                
+            </Grid>
+        </StackPanel>
+        <Grid Grid.Column="1" Background="red">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+            <Frame Source="../UIs/Views/Message/DirectMessagePage.xaml"/>
+            <Grid Grid.Row="1" Background="Blue">
+                
+            </Grid>
         </Grid>
-        <Grid Visibility="Visible"></Grid>
+        <!--<Grid Grid.ColumnSpan="2" Visibility="{Binding LoginPageVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid Opacity="0.3" Background="Black"/>
+            <Frame Source="../UIs/Views/Account/LoginPage.xaml"/>
+        </Grid>-->
     </Grid>
 </Window>

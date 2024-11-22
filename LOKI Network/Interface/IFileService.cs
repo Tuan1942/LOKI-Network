@@ -1,4 +1,4 @@
-﻿using LOKI_Network.DbContexts;
+﻿using LOKI_Model.Enums;
 
 namespace LOKI_Network.Interface
 {

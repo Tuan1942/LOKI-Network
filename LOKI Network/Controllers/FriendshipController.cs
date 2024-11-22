@@ -1,4 +1,4 @@
-﻿using LOKI_Network.Services;
+﻿using LOKI_Network.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +11,8 @@ namespace LOKI_Network.Controllers
     [Authorize]
     public class FriendshipController : ControllerBase
     {
-        private readonly FriendshipService _friendshipService;
-        public FriendshipController(FriendshipService friendshipService)
+        private readonly IFriendshipService _friendshipService;
+        public FriendshipController(IFriendshipService friendshipService)
         {
             _friendshipService = friendshipService;
         }

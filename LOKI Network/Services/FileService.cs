@@ -1,4 +1,5 @@
-﻿using LOKI_Network.DbContexts;
+﻿using LOKI_Model.Enums;
+using LOKI_Network.DbContexts;
 using LOKI_Network.Interface;
 using Microsoft.EntityFrameworkCore;
 

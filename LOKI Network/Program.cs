@@ -17,11 +17,11 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
 // Register services
-builder.Services.AddSingleton<WebSocketService>();
-builder.Services.AddScoped<IMessageService, MessageService>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddSingleton<IWebSocketService, WebSocketService>();
+builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFileService, FileService>(provider =>
     new FileService(provider.GetRequiredService<LokiContext>(), configuration["FileStoragePath"]));
 

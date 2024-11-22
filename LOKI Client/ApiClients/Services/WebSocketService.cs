@@ -1,4 +1,4 @@
-﻿using LOKI_Client.Models.DTOs;
+﻿using LOKI_Model.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +13,12 @@ namespace LOKI_Client.ApiClients.Services
     {
         private readonly Uri _baseWebSocketUri;
         private ClientWebSocket? _webSocket;
-        private User _user;
-        public User User
+        private UserDTO _user;
+        public UserDTO User
         {  
             get 
             { 
-                return new User
+                return new UserDTO
                 {
                     UserId = _user.UserId,
                     Username = _user.Username,
@@ -136,7 +136,7 @@ namespace LOKI_Client.ApiClients.Services
         {
             try
             {
-                var messageObj = JsonSerializer.Deserialize<WebSocketMessage>(message);
+                var messageObj = JsonSerializer.Deserialize<WebSocketMessageDTO>(message);
 
                 switch (messageObj?.Type)
                 {

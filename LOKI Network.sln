@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOKI Network", "LOKI Networ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LOKI Client", "LOKI Client\LOKI Client.csproj", "{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LOKI Model", "LOKI Model\LOKI Model.csproj", "{F2FCEE87-75CF-41E3-8F30-0CE6B7628772}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F7C37E1-3882-4E4E-ACAA-6CB002CF47ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2FCEE87-75CF-41E3-8F30-0CE6B7628772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2FCEE87-75CF-41E3-8F30-0CE6B7628772}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2FCEE87-75CF-41E3-8F30-0CE6B7628772}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2FCEE87-75CF-41E3-8F30-0CE6B7628772}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

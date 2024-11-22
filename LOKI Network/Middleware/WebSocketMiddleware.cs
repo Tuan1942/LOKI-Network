@@ -30,20 +30,29 @@ namespace LOKI_Network.Middleware
             {
                 var token = context.Request.Headers["Authorization"].ToString();
 
-                var jwtHelper = new JwtHelper(_configuration);
-                var user = await jwtHelper.ValidateJwtToken(token, _configuration);
-                var userId = user.UserId;
-                if (user == null || userId == null)  // Validate token
+                try
                 {
-                    context.Response.StatusCode = 401; // Unauthorized
-                    return;
+                    var jwtHelper = new JwtHelper(_configuration);
+                    var user = await jwtHelper.ValidateJwtToken(token, _configuration);
+                    Console.WriteLine($"WebSocket connect request: {token}");
+
+                    if (user == null || user.UserId == null)  // Validate token
+                    {
+                        context.Response.StatusCode = 401; // Unauthorized
+                        return;
+                    }
+                    var userId = user.UserId;
+
+                    var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+
+                    _webSocketService.AddConnection((Guid)userId, webSocket);
+
+                    await HandleWebSocketConnection(webSocket, (Guid)userId);
                 }
-
-                var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-
-                _webSocketService.AddConnection((Guid)userId, webSocket);
-
-                await HandleWebSocketConnection(webSocket, (Guid)userId);
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"WebSocket connect request error: {ex.Message} \n {token}");
+                }
             }
             else
             {

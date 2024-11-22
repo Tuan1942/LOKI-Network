@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
-using LOKI_Client.Models.DTOs;
+using LOKI_Model.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,26 +9,35 @@ using System.Windows.Media.Imaging;
 
 namespace LOKI_Client.Models
 {
-    public class LoginRequest : ValueChangedMessage<User>
+    public class LoginRequest : ValueChangedMessage<UserDTO>
     {
-        public LoginRequest(User user) : base(user)
+        public LoginRequest(UserDTO user) : base(user)
         {
             User = user;
         }
 
-        public User User { get; set; }
+        public UserDTO User { get; set; }
+    }
+    public class RefreshFriendListRequest : ValueChangedMessage<string>
+    {
+        public RefreshFriendListRequest(string token) : base(token)
+        {
+            Token = token;
+        }
+
+        public string Token { get; set; }
     }
     public class OpenLoginPageRequest
     {
 
     }
-    public class ConnectWebSocketRequest : ValueChangedMessage<User>
+    public class ConnectWebSocketRequest : ValueChangedMessage<UserDTO>
     {
-        public ConnectWebSocketRequest(User user) : base(user)
+        public ConnectWebSocketRequest(UserDTO user) : base(user)
         {
             User = user;
         }
 
-        public User User { get; set; }
+        public UserDTO User { get; set; }
     }
 }

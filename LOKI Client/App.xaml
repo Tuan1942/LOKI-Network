@@ -4,6 +4,11 @@
              xmlns:local="clr-namespace:LOKI_Client"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <FontFamily x:Key="Pretendard">pack://application:,,,/Resources/Fonts/#Pretendard Variable</FontFamily>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

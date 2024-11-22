@@ -1,5 +1,4 @@
-﻿using LOKI_Client.Models.DTOs;
-using System;
+﻿using LOKI_Model.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +8,7 @@ namespace LOKI_Client.ApiClients.Interfaces
 {
     public interface IUserService
     {
-        Task<User> Login(User user);
-        Task<bool> Register(User user);
+        Task<UserDTO> Login(UserDTO user);
+        Task<bool> Register(UserDTO user);
     }
 }
