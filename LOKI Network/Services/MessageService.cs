@@ -36,8 +36,8 @@ public class MessageService : IMessageService
         // Handle each file in the list
         foreach (var file in files)
         {
-            using var fileStream = file.OpenReadStream();
-            var fileUrl = await _fileService.UploadFile(message.MessageId, fileStream, file.FileName, FileType.Other);
+            FileType fileType = FileType.Other;
+            var fileUrl = await _fileService.UploadFileAsync(file, fileType);
 
             var attachment = new Attachment
             {
@@ -93,7 +93,7 @@ public class MessageService : IMessageService
         // Delete attachments using FileService
         foreach (var attachment in message.Attachments)
         {
-            await _fileService.DeleteFile(attachment.AttachmentId);
+            _fileService.DeleteFile(attachment.FileUrl);
         }
 
         // Delete the message itself
@@ -103,7 +103,31 @@ public class MessageService : IMessageService
 
     public List<MessageDTO> GetMessagesByConversation(Guid conversationId)
     {
-        var messages = _dbContext.Messages.Where(m => m.ConversationId == conversationId);
-        return messages?.Select(m => new MessageDTO()).ToList();
+        var messages = _dbContext.Messages
+            .Include(m => m.Sender)
+            .Include(m => m.Attachments)
+            .Where(m => m.ConversationId == conversationId)
+            .ToList();
+
+        return messages.Select(m => new MessageDTO
+        {
+            User = new UserDTO
+            {
+                Username = m.Sender?.Username,
+                FirstName = m.Sender?.FirstName,
+                LastName = m.Sender?.LastName,
+                MiddleName = m.Sender?.MiddleName,
+                ProfilePictureUrl = m.Sender?.ProfilePictureUrl,
+                Email = m.Sender?.Email,
+                Gender = m.Sender.Gender,
+            },
+            Content = m.Content,
+            SentDate = m.SentDate,
+            Attachments = m.Attachments?.Select(a => new AttachmentDTO
+            {
+                AttachmentId = a.AttachmentId
+            }).ToList()
+        }).ToList();
     }
+}
 }

@@ -1,5 +1,6 @@
 ﻿using LOKI_Model.Enums;
 using LOKI_Network.DbContexts;
+using LOKI_Network.Helpers;
 using LOKI_Network.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,30 +17,19 @@ namespace LOKI_Network.Services
             _fileStoragePath = fileStoragePath;
         }
 
-        public async Task<string> UploadFile(Guid messageId, Stream fileStream, string fileName, FileType fileType)
+        public async Task <string> UploadFileAsync(IFormFile file, FileType fileType)
         {
-            var attachmentId = Guid.NewGuid();
+            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
             var folderPath = Path.Combine(_fileStoragePath, fileName);
-            var filePath = Path.Combine(_fileStoragePath, attachmentId.ToString());
+            var filePath = Path.Combine(folderPath, fileName);
 
-            // Save file to storage
-            using (var fileStreamOut = new FileStream(filePath, FileMode.Create))
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await fileStream.CopyToAsync(fileStreamOut);
+                await file.CopyToAsync(stream);
             }
 
-            // Create and save Attachment metadata
-            var attachment = new Attachment
-            {
-                AttachmentId = attachmentId,
-                MessageId = messageId,
-                FileUrl = filePath,
-                FileType = fileType,
-                CreatedDate = DateTime.UtcNow
-            };
-            _lokiContext.Attachments.Add(attachment);
-            await _lokiContext.SaveChangesAsync();
-
+            var contentType = FileHelper.GetContentType(filePath);
+            fileType = FileHelper.GetFileType(contentType);
             return filePath;
         }
 
@@ -56,25 +46,24 @@ namespace LOKI_Network.Services
             return attachment.FileUrl;
         }
 
-        public async Task DeleteFile(Guid attachmentId)
+        public bool DeleteFile(string filePath)
         {
-            var attachment = await _lokiContext.Attachments
-                .FirstOrDefaultAsync(a => a.AttachmentId == attachmentId);
-
-            if (attachment == null)
+            try
             {
-                throw new FileNotFoundException("Attachment not found.");
-            }
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                    return true;
+                }
 
-            // Delete file from storage
-            if (File.Exists(attachment.FileUrl))
+                return false;
+            }
+            catch (Exception ex)
             {
-                File.Delete(attachment.FileUrl);
+                return false;
             }
-
-            // Remove attachment record from database
-            _lokiContext.Attachments.Remove(attachment);
-            await _lokiContext.SaveChangesAsync();
         }
+
+        public Task<List<>>
     }
 }

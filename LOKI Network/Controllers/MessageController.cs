@@ -65,15 +65,4 @@ namespace LOKI_Network.Controllers
         }
     }
 
-    public class MessageDTO
-    {
-        public Guid MessageId { get; set; } // Primary Key
-        public Guid ConversationId { get; set; } // Foreign Key
-        public Guid SenderId { get; set; } // Foreign Key
-        public string Content { get; set; }
-        public DateTime SentDate { get; set; } = DateTime.UtcNow;
-
-        public List<IFormFile> Files { get; set; } // List for multiple files
-
-    }
 }
