@@ -1,4 +1,5 @@
 ﻿using LOKI_Model.Enums;
+using LOKI_Model.Models;
 using LOKI_Network.DbContexts;
 using LOKI_Network.Helpers;
 using LOKI_Network.Interface;
@@ -8,12 +9,12 @@ namespace LOKI_Network.Services
 {
     public class FileService : IFileService
     {
-        private readonly LokiContext _lokiContext;
+        private readonly LokiContext _dbContext;
         private readonly string _fileStoragePath;
 
         public FileService(LokiContext lokiContext, string fileStoragePath)
         {
-            _lokiContext = lokiContext;
+            _dbContext = lokiContext;
             _fileStoragePath = fileStoragePath;
         }
 
@@ -35,7 +36,7 @@ namespace LOKI_Network.Services
 
         public async Task<string> GetFileUrl(Guid attachmentId)
         {
-            var attachment = await _lokiContext.Attachments
+            var attachment = await _dbContext.Attachments
                 .FirstOrDefaultAsync(a => a.AttachmentId == attachmentId);
 
             if (attachment == null)
@@ -64,6 +65,22 @@ namespace LOKI_Network.Services
             }
         }
 
-        public Task<List<>>
+        public async Task<List<AttachmentDTO>> GetAttachmentsByConversationAsync(Guid conversationId)
+        {
+            var attachments = await _dbContext.Messages
+                .Where(m => m.ConversationId == conversationId)
+                .SelectMany(m => m.Attachments)
+                .Select(a => new AttachmentDTO
+                {
+                    AttachmentId = a.AttachmentId,
+                    CreatedDate = a.CreatedDate,
+                    FileName = a.FileName,
+                    FileType = a.FileType,
+                    FileUrl = a.FileUrl
+                })
+                .ToListAsync();
+
+            return attachments;
+        }
     }
 }
