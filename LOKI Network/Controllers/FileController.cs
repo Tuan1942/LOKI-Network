@@ -1,16 +1,18 @@
 ﻿using LOKI_Network.Helpers;
 using LOKI_Network.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LOKI_Network.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class FileController : ControllerBase
     {
         private readonly IFileService _fileService;
         [HttpPost("upload")]
+        [Authorize]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
