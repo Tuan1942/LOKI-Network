@@ -64,23 +64,5 @@ namespace LOKI_Network.Services
                 return false;
             }
         }
-
-        public async Task<List<AttachmentDTO>> GetAttachmentsByConversationAsync(Guid conversationId)
-        {
-            var attachments = await _dbContext.Messages
-                .Where(m => m.ConversationId == conversationId)
-                .SelectMany(m => m.Attachments)
-                .Select(a => new AttachmentDTO
-                {
-                    AttachmentId = a.AttachmentId,
-                    CreatedDate = a.CreatedDate,
-                    FileName = a.FileName,
-                    FileType = a.FileType,
-                    FileUrl = a.FileUrl
-                })
-                .ToListAsync();
-
-            return attachments;
-        }
     }
 }

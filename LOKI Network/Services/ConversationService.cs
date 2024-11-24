@@ -41,6 +41,58 @@ namespace LOKI_Network.Services
 
             return conversations;
         }
+        public async Task<List<ConversationDTO>> GetDirectConversationsAsync(Guid userId)
+        {
+            var conversations = await _context.Conversations
+                .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == false)
+                .Include(c => c.ConversationParticipants)
+                .ThenInclude(cp => cp.User)
+                .Select(c => new ConversationDTO
+                {
+                    ConversationId = c.ConversationId,
+                    Name = c.ConversationName,
+                    IsGroup = c.IsGroup,
+                    CreatedDate = c.CreatedDate,
+                    Users = new ObservableCollection<UserDTO>(
+                        c.ConversationParticipants.Select(cp => new UserDTO
+                        {
+                            UserId = cp.User.UserId,
+                            Username = cp.User.Username,
+                            Email = cp.User.Email,
+                            ProfilePictureUrl = cp.User.ProfilePictureUrl,
+                            Gender = cp.User.Gender,
+                        }))
+                })
+                .ToListAsync();
+
+            return conversations;
+        }
+        public async Task<List<ConversationDTO>> GetGroupConversationsAsync(Guid userId)
+        {
+            var conversations = await _context.Conversations
+                .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == true)
+                .Include(c => c.ConversationParticipants)
+                .ThenInclude(cp => cp.User)
+                .Select(c => new ConversationDTO
+                {
+                    ConversationId = c.ConversationId,
+                    Name = c.ConversationName,
+                    IsGroup = c.IsGroup,
+                    CreatedDate = c.CreatedDate,
+                    Users = new ObservableCollection<UserDTO>(
+                        c.ConversationParticipants.Select(cp => new UserDTO
+                        {
+                            UserId = cp.User.UserId,
+                            Username = cp.User.Username,
+                            Email = cp.User.Email,
+                            ProfilePictureUrl = cp.User.ProfilePictureUrl,
+                            Gender = cp.User.Gender,
+                        }))
+                })
+                .ToListAsync();
+
+            return conversations;
+        }
         public async Task<List<UserDTO>> GetParticipants(Guid conversationId)
         {
             var conversation = await _context.Conversations.Include(c => c.ConversationParticipants).FirstOrDefaultAsync(c => c.ConversationId == conversationId);
@@ -108,6 +160,23 @@ namespace LOKI_Network.Services
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex) { throw; }
+        }
+        public async Task<List<AttachmentDTO>> GetAttachmentsByConversationAsync(Guid conversationId)
+        {
+            var attachments = await _context.Messages
+                .Where(m => m.ConversationId == conversationId)
+                .SelectMany(m => m.Attachments)
+                .Select(a => new AttachmentDTO
+                {
+                    AttachmentId = a.AttachmentId,
+                    CreatedDate = a.CreatedDate,
+                    FileName = a.FileName,
+                    FileType = a.FileType,
+                    FileUrl = a.FileUrl
+                })
+                .ToListAsync();
+
+            return attachments;
         }
     }
 }

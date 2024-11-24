@@ -56,6 +56,26 @@ namespace LOKI_Network.Controllers
             }
         }
 
+        // Get participants of a specific conversation
+        [HttpGet("{Id}/files")]
+        public async Task<IActionResult> GetFiles(string Id)
+        {
+            try
+            {
+                var conversationId = Guid.Parse(Id);
+                var fileList = await _conversationService.GetAttachmentsByConversationAsync(conversationId);
+                return Ok(fileList);
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid conversation ID format.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+            }
+        }
+
         // Create a new conversation
         [HttpPost("Create")]
         public async Task<IActionResult> CreateAsync(ConversationDTO conversation)

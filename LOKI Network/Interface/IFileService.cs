@@ -8,6 +8,5 @@ namespace LOKI_Network.Interface
         Task<string> UploadFileAsync(IFormFile file, FileType fileType);
         Task<string> GetFileUrl(Guid attachmentId);
         bool DeleteFile(string filePath);
-        Task<List<AttachmentDTO>> GetAttachmentsByConversationAsync(Guid conversationId);
     }
 }
