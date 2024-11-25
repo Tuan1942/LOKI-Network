@@ -130,6 +130,7 @@ namespace LOKI_Network.DbContexts
         public string? ConversationName { get; set; }
         public bool IsGroup { get; set; }
         public DateTime CreatedDate { get; set; }
+        public DateTime? LatestMessageDate { get; set; }
 
         // Navigation properties
         public ICollection<ConversationParticipant> ConversationParticipants { get; set; }

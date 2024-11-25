@@ -14,12 +14,10 @@ namespace LOKI_Network.Controllers
     public class MessageController : ControllerBase
     {
         private readonly IMessageService _messageService;
-        private readonly IFileService _fileService;
 
         public MessageController(IMessageService messageService, IFileService fileService)
         {
             _messageService = messageService;
-            _fileService = fileService;
         }
 
         [HttpPost("create")]
@@ -42,7 +40,14 @@ namespace LOKI_Network.Controllers
             if (senderId == Guid.Empty)
                 return Unauthorized();
 
-            var result = await _messageService.SendMessageAsync(senderId, sendMessageDto.MessageId, sendMessageDto.ConversationId);
+            var messageId = await _messageService.CreateMessageAsync(
+                senderId,
+                sendMessageDto.Content,
+                sendMessageDto.Files
+            );
+
+
+            var result = await _messageService.SendMessageAsync(senderId, messageId, sendMessageDto.ConversationId);
             return result ? Ok("Message sent successfully.") : StatusCode(500, "Error sending message.");
         }
 

@@ -37,12 +37,11 @@ namespace LOKI_Network.Controllers
         }
 
         // Get participants of a specific conversation
-        [HttpGet("{Id}")]
-        public async Task<IActionResult> GetParticipants(string Id)
+        [HttpGet("{conversationId:guid}")]
+        public async Task<IActionResult> GetParticipants(Guid conversationId)
         {
             try
             {
-                var conversationId = Guid.Parse(Id);
                 var participantList = await _conversationService.GetParticipants(conversationId);
                 return Ok(participantList);
             }
@@ -57,12 +56,11 @@ namespace LOKI_Network.Controllers
         }
 
         // Get participants of a specific conversation
-        [HttpGet("{Id}/files")]
-        public async Task<IActionResult> GetFiles(string Id)
+        [HttpGet("{conversationId:guid}/files")]
+        public async Task<IActionResult> GetFiles(Guid conversationId)
         {
             try
             {
-                var conversationId = Guid.Parse(Id);
                 var fileList = await _conversationService.GetAttachmentsByConversationAsync(conversationId);
                 return Ok(fileList);
             }
@@ -76,8 +74,27 @@ namespace LOKI_Network.Controllers
             }
         }
 
+        // Get messages of a specific conversation
+        [HttpGet("{conversationId:guid}/messages/{page:int}")]
+        public async Task<IActionResult> GetMessages(Guid conversationId, int page)
+        {
+            try
+            {
+                var fileList = await _conversationService.GetMessagesByConversationAsync(conversationId, page);
+                return Ok(fileList);
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid conversation ID format.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+            }
+        }
+
         // Create a new conversation
-        [HttpPost("Create")]
+        [HttpPost("create")]
         public async Task<IActionResult> CreateAsync(ConversationDTO conversation)
         {
             try
@@ -115,13 +132,12 @@ namespace LOKI_Network.Controllers
         }
 
         // Leave a conversation
-        [HttpPost("Leave/{Id}")]
-        public async Task<IActionResult> LeaveAsync(string Id)
+        [HttpPost("leave/{conversationId:guid}")]
+        public async Task<IActionResult> LeaveAsync(Guid conversationId)
         {
             try
             {
                 var userId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                var conversationId = Guid.Parse(Id);
 
                 await _conversationService.LeaveConversation(userId, conversationId);
                 return Ok("You have successfully left the conversation.");
@@ -133,6 +149,22 @@ namespace LOKI_Network.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+            }
+        }
+
+        // Send message to conversation
+        [HttpPost("{conversationId:guid}/send")]
+        public async Task<IActionResult> SendMessageAsync(Guid conversationId, [FromBody] MessageDTO message)
+        {
+            try
+            {
+                message.ConversationId = conversationId;
+                await _conversationService.SendMessage(message);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
         }
     }

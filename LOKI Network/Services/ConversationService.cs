@@ -1,6 +1,7 @@
 ﻿using LOKI_Model.Enums;
 using LOKI_Model.Models;
 using LOKI_Network.DbContexts;
+using LOKI_Network.Interface;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Reflection;
@@ -9,14 +10,15 @@ namespace LOKI_Network.Services
 {
     public class ConversationService : IConversationService
     {
-        private readonly LokiContext _context;
+        private readonly LokiContext _dbContext;
+        private readonly IFileService _fileService;
         public ConversationService(LokiContext lokiContext)
         {
-            _context = lokiContext;
+            _dbContext = lokiContext;
         }
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
         {
-            var conversations = await _context.Conversations
+            var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants
                 .Any(cp => cp.UserId == userId))
                 .Include(c => c.ConversationParticipants)
@@ -43,7 +45,7 @@ namespace LOKI_Network.Services
         }
         public async Task<List<ConversationDTO>> GetDirectConversationsAsync(Guid userId)
         {
-            var conversations = await _context.Conversations
+            var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == false)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
@@ -69,7 +71,7 @@ namespace LOKI_Network.Services
         }
         public async Task<List<ConversationDTO>> GetGroupConversationsAsync(Guid userId)
         {
-            var conversations = await _context.Conversations
+            var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == true)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
@@ -95,7 +97,7 @@ namespace LOKI_Network.Services
         }
         public async Task<List<UserDTO>> GetParticipants(Guid conversationId)
         {
-            var conversation = await _context.Conversations.Include(c => c.ConversationParticipants).FirstOrDefaultAsync(c => c.ConversationId == conversationId);
+            var conversation = await _dbContext.Conversations.Include(c => c.ConversationParticipants).FirstOrDefaultAsync(c => c.ConversationId == conversationId);
             var userList = conversation?.ConversationParticipants.Select(cp => new UserDTO
             {
                 UserId = cp.User.UserId,
@@ -128,15 +130,15 @@ namespace LOKI_Network.Services
                 }).ToList()
             };
 
-            _context.Conversations.Add(conversation);
-            await _context.SaveChangesAsync();
+            _dbContext.Conversations.Add(conversation);
+            await _dbContext.SaveChangesAsync();
         }
         public async Task LeaveConversation(Guid userId, Guid conversationId)
         {
             try
             {
                 // Load the conversation with its participants
-                var conversation = await _context.Conversations
+                var conversation = await _dbContext.Conversations
                     .Include(c => c.ConversationParticipants)
                     .FirstOrDefaultAsync(c => c.ConversationId == conversationId);
 
@@ -155,15 +157,15 @@ namespace LOKI_Network.Services
                 }
 
                 // Remove the participant
-                _context.ConversationParticipants.Remove(participant);
+                _dbContext.ConversationParticipants.Remove(participant);
 
-                await _context.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
             }
             catch (Exception ex) { throw; }
         }
         public async Task<List<AttachmentDTO>> GetAttachmentsByConversationAsync(Guid conversationId)
         {
-            var attachments = await _context.Messages
+            var attachments = await _dbContext.Messages
                 .Where(m => m.ConversationId == conversationId)
                 .SelectMany(m => m.Attachments)
                 .Select(a => new AttachmentDTO
@@ -177,6 +179,75 @@ namespace LOKI_Network.Services
                 .ToListAsync();
 
             return attachments;
+        }
+        public async Task<List<MessageDTO>> GetMessagesByConversationAsync(Guid conversationId, int pageNumber = 1, int pageSize = 10)
+        {
+            // Validate inputs
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var messages = _dbContext.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Attachments)
+                .Where(m => m.ConversationId == conversationId)
+                .OrderByDescending(m => m.SentDate) // Optional: Order by sent date (most recent first)
+                .Skip((pageNumber - 1) * pageSize)  // Skip messages from previous pages
+                .Take(pageSize)                     // Take only the current page's messages
+                .ToList();
+
+            return messages.Select(m => new MessageDTO
+            {
+                User = new UserDTO
+                {
+                    Username = m.Sender?.Username,
+                    FirstName = m.Sender?.FirstName,
+                    LastName = m.Sender?.LastName,
+                    MiddleName = m.Sender?.MiddleName,
+                    ProfilePictureUrl = m.Sender?.ProfilePictureUrl,
+                    Email = m.Sender?.Email,
+                    Gender = m.Sender.Gender,
+                },
+                Content = m.Content,
+                SentDate = m.SentDate,
+                Attachments = m.Attachments?.Select(a => new AttachmentDTO
+                {
+                    AttachmentId = a.AttachmentId
+                }).ToList()
+            }).ToList();
+        }
+        public async Task SendMessage(MessageDTO inputMessage)
+        {
+            var message = new Message
+            {
+                MessageId = Guid.NewGuid(),
+                SenderId = inputMessage.SenderId,
+                Content = inputMessage.Content,
+                SentDate = DateTime.UtcNow
+            };
+
+            _dbContext.Messages.Add(message);
+            await _dbContext.SaveChangesAsync();
+
+            // Handle each file in the list
+            foreach (var file in inputMessage.Files)
+            {
+                FileType fileType = FileType.Other;
+                var fileUrl = await _fileService.UploadFileAsync(file, fileType);
+
+                var attachment = new Attachment
+                {
+                    AttachmentId = Guid.NewGuid(),
+                    MessageId = message.MessageId,
+                    FileUrl = fileUrl,
+                    FileName = file.FileName,
+                    FileType = FileType.Other,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _dbContext.Attachments.Add(attachment);
+            }
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using LOKI_Network.DbContexts;
+﻿using LOKI_Model.Models;
+using LOKI_Network.DbContexts;
 
 namespace LOKI_Network.Interface
 {

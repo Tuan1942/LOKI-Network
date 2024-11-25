@@ -101,33 +101,5 @@ public class MessageService : IMessageService
         await _dbContext.SaveChangesAsync();
     }
 
-    public List<MessageDTO> GetMessagesByConversation(Guid conversationId)
-    {
-        var messages = _dbContext.Messages
-            .Include(m => m.Sender)
-            .Include(m => m.Attachments)
-            .Where(m => m.ConversationId == conversationId)
-            .ToList();
-
-        return messages.Select(m => new MessageDTO
-        {
-            User = new UserDTO
-            {
-                Username = m.Sender?.Username,
-                FirstName = m.Sender?.FirstName,
-                LastName = m.Sender?.LastName,
-                MiddleName = m.Sender?.MiddleName,
-                ProfilePictureUrl = m.Sender?.ProfilePictureUrl,
-                Email = m.Sender?.Email,
-                Gender = m.Sender.Gender,
-            },
-            Content = m.Content,
-            SentDate = m.SentDate,
-            Attachments = m.Attachments?.Select(a => new AttachmentDTO
-            {
-                AttachmentId = a.AttachmentId
-            }).ToList()
-        }).ToList();
-    }
 }
 
