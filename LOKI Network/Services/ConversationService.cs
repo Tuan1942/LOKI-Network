@@ -12,9 +12,16 @@ namespace LOKI_Network.Services
     {
         private readonly LokiContext _dbContext;
         private readonly IFileService _fileService;
-        public ConversationService(LokiContext lokiContext)
+        private readonly IWebSocketService _webSocketService;
+        private readonly IUserService _userService;
+        public ConversationService(
+            LokiContext lokiContext, 
+            IWebSocketService webSocketService,
+            IUserService userService)
         {
             _dbContext = lokiContext;
+            _webSocketService = webSocketService;
+            _userService = userService;
         }
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
         {
@@ -97,7 +104,10 @@ namespace LOKI_Network.Services
         }
         public async Task<List<UserDTO>> GetParticipants(Guid conversationId)
         {
-            var conversation = await _dbContext.Conversations.Include(c => c.ConversationParticipants).FirstOrDefaultAsync(c => c.ConversationId == conversationId);
+            var conversation = await _dbContext.Conversations
+                .Include(c => c.ConversationParticipants)
+                .ThenInclude(cp => cp.User)
+                .FirstOrDefaultAsync(c => c.ConversationId == conversationId);
             var userList = conversation?.ConversationParticipants.Select(cp => new UserDTO
             {
                 UserId = cp.User.UserId,
@@ -197,6 +207,100 @@ namespace LOKI_Network.Services
 
             return messages.Select(m => new MessageDTO
             {
+                MessageId = m.MessageId,
+                User = new UserDTO
+                {
+                    Username = m.Sender?.Username,
+                    FirstName = m.Sender?.FirstName,
+                    LastName = m.Sender?.LastName,
+                    MiddleName = m.Sender?.MiddleName,
+                    ProfilePictureUrl = m.Sender?.ProfilePictureUrl,
+                    Email = m.Sender?.Email,
+                    Gender = m.Sender.Gender,
+                },
+                Content = m.Content,
+                SentDate = m.SentDate,
+                Attachments = m.Attachments?.Select(a => new AttachmentDTO
+                {
+                    AttachmentId = a.AttachmentId
+                }).ToList()
+            }).OrderBy(m => m.SentDate).ToList();
+        }
+        public async Task SendMessage(MessageDTO inputMessage)
+        {
+            var message = new Message
+            {
+                MessageId = Guid.NewGuid(),
+                ConversationId = inputMessage.ConversationId,
+                SenderId = inputMessage.SenderId,
+                Content = inputMessage.Content,
+                SentDate = DateTime.UtcNow
+            };
+
+            _dbContext.Messages.Add(message);
+            await _dbContext.SaveChangesAsync();
+
+            if (inputMessage.Files != null)
+            {
+                // Handle each file in the list
+                foreach (var file in inputMessage.Files)
+                {
+                    FileType fileType = FileType.Other;
+                    var fileUrl = await _fileService.UploadFileAsync(file, fileType);
+
+                    var attachment = new Attachment
+                    {
+                        AttachmentId = Guid.NewGuid(),
+                        MessageId = message.MessageId,
+                        FileUrl = fileUrl,
+                        FileName = file.FileName,
+                        FileType = FileType.Other,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    _dbContext.Attachments.Add(attachment);
+                }
+
+                await _dbContext.SaveChangesAsync();
+            }
+
+            var participantList = 
+                (await GetParticipants(inputMessage.ConversationId))
+                .Select(p => p.UserId)
+                .Select(g => g.Value)
+                .ToList();
+            await _webSocketService.BroadcastMessageAsync(inputMessage, participantList);
+
+        }
+        public async Task<List<MessageDTO>> GetNextMessagesAsync(Guid conversationId, Guid lastMessageId, int pageSize = 10)
+        {
+            // Validate inputs
+            if (pageSize <= 0) pageSize = 10;
+
+            // Find the reference message based on the provided lastMessageId
+            var referenceMessage = await _dbContext.Messages
+                .Where(m => m.MessageId == lastMessageId)
+                .Select(m => m.SentDate)
+                .FirstOrDefaultAsync();
+
+            if (referenceMessage == default)
+            {
+                throw new ArgumentException("Invalid message ID provided.");
+            }
+
+            // Retrieve messages after the reference message
+            var messages = await _dbContext.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Attachments)
+                .Where(m => m.ConversationId == conversationId && m.SentDate < referenceMessage)
+                .OrderByDescending(m => m.SentDate) // Order by sent date (most recent first)
+                .Take(pageSize)                     // Take the next pageSize messages
+                .ToListAsync();
+
+            // Map the messages to DTOs
+            return messages.Select(m => new MessageDTO
+            {
+                MessageId = m.MessageId,
                 User = new UserDTO
                 {
                     Username = m.Sender?.Username,
@@ -214,40 +318,6 @@ namespace LOKI_Network.Services
                     AttachmentId = a.AttachmentId
                 }).ToList()
             }).ToList();
-        }
-        public async Task SendMessage(MessageDTO inputMessage)
-        {
-            var message = new Message
-            {
-                MessageId = Guid.NewGuid(),
-                SenderId = inputMessage.SenderId,
-                Content = inputMessage.Content,
-                SentDate = DateTime.UtcNow
-            };
-
-            _dbContext.Messages.Add(message);
-            await _dbContext.SaveChangesAsync();
-
-            // Handle each file in the list
-            foreach (var file in inputMessage.Files)
-            {
-                FileType fileType = FileType.Other;
-                var fileUrl = await _fileService.UploadFileAsync(file, fileType);
-
-                var attachment = new Attachment
-                {
-                    AttachmentId = Guid.NewGuid(),
-                    MessageId = message.MessageId,
-                    FileUrl = fileUrl,
-                    FileName = file.FileName,
-                    FileType = FileType.Other,
-                    CreatedDate = DateTime.UtcNow
-                };
-
-                _dbContext.Attachments.Add(attachment);
-            }
-
-            await _dbContext.SaveChangesAsync();
         }
     }
 }

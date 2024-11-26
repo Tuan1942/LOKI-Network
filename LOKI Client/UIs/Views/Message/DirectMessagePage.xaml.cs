@@ -1,4 +1,6 @@
-﻿using LOKI_Client.UIs.ViewModels.Account;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LOKI_Client.Models;
+using LOKI_Client.UIs.ViewModels.Account;
 using LOKI_Client.UIs.ViewModels.Message;
 using System;
 using System.Collections.Generic;
@@ -26,6 +28,31 @@ namespace LOKI_Client.UIs.Views.Message
         {
             InitializeComponent();
             DataContext = App.Current.Services.GetService(typeof(MessageViewModel));
+            RegisterServices();
         }
+
+        private void RegisterServices()
+        {
+            WeakReferenceMessenger.Default.Register<ScrollToBottomRequest>(this, (r, m) =>
+            {
+                ScrollToBottom();
+            });
+
+        }
+        private void ScrollToBottom()
+        {
+            if (MainContent != null)
+            {
+                MainContent.ScrollToEnd();
+            }
+        }
+
+        private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is ScrollViewer mainContent)
+                ScrollToBottom();
+
+        }
+
     }
 }

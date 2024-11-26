@@ -12,7 +12,7 @@ namespace LOKI_Network.Interface
 
         void RemoveConnection(Guid userId, WebSocket webSocket);
         Task SendMessageToUserAsync(Guid userId, WebSocketMessageDTO message);
-        Task BroadcastMessageAsync(Guid conversationId, string message, Func<Guid, List<Guid>> getParticipantIds);
+        Task BroadcastMessageAsync(MessageDTO message, List<Guid> participantIds);
         Task ListenToWebSocketAsync(Guid userId, WebSocket webSocket);
     }
 }

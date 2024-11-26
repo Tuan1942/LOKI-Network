@@ -1,9 +1,11 @@
-﻿using LOKI_Model.Models;
+﻿using Azure.Core;
+using LOKI_Model.Models;
 using LOKI_Network.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace LOKI_Network.Controllers
 {
@@ -13,13 +15,14 @@ namespace LOKI_Network.Controllers
     public class ConversationController : ControllerBase
     {
         private readonly IConversationService _conversationService;
+        private readonly ILogger<ConversationController> _logger;
 
-        public ConversationController(IConversationService conversationService)
+        public ConversationController(IConversationService conversationService, ILogger<ConversationController> logger)
         {
             _conversationService = conversationService;
+            _logger = logger;
         }
 
-        // Get all conversations for the logged-in user
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -27,144 +30,147 @@ namespace LOKI_Network.Controllers
             {
                 var userId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 var result = await _conversationService.GetConversationsAsync(userId);
-                return Ok(result);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                // Log the error (consider a logging library)
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+                _logger.LogError(ex, "Error fetching conversations for user.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = ex.Message });
             }
         }
 
-        // Get participants of a specific conversation
         [HttpGet("{conversationId:guid}")]
         public async Task<IActionResult> GetParticipants(Guid conversationId)
         {
             try
             {
                 var participantList = await _conversationService.GetParticipants(conversationId);
-                return Ok(participantList);
+                return Ok(new { success = true, data = participantList });
             }
             catch (FormatException)
             {
-                return BadRequest("Invalid conversation ID format.");
+                return BadRequest(new { success = false, message = "Invalid conversation ID format." });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+                _logger.LogError(ex, "Error fetching participants.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = ex.Message });
             }
         }
 
-        // Get participants of a specific conversation
         [HttpGet("{conversationId:guid}/files")]
         public async Task<IActionResult> GetFiles(Guid conversationId)
         {
             try
             {
                 var fileList = await _conversationService.GetAttachmentsByConversationAsync(conversationId);
-                return Ok(fileList);
-            }
-            catch (FormatException)
-            {
-                return BadRequest("Invalid conversation ID format.");
+                return Ok(new { success = true, data = fileList });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+                _logger.LogError(ex, "Error fetching files.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = ex.Message });
             }
         }
 
-        // Get messages of a specific conversation
         [HttpGet("{conversationId:guid}/messages/{page:int}")]
         public async Task<IActionResult> GetMessages(Guid conversationId, int page)
         {
+            if (page <= 0)
+                return BadRequest(new { success = false, message = "Page number must be greater than zero." });
+
             try
             {
-                var fileList = await _conversationService.GetMessagesByConversationAsync(conversationId, page);
-                return Ok(fileList);
-            }
-            catch (FormatException)
-            {
-                return BadRequest("Invalid conversation ID format.");
+                var messageList = await _conversationService.GetMessagesByConversationAsync(conversationId, page);
+                return Ok(new { success = true, data = messageList });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+                _logger.LogError(ex, "Error fetching messages.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = ex.Message });
             }
         }
 
-        // Create a new conversation
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateAsync(ConversationDTO conversation)
+        [HttpGet("{conversationId:guid}/messages/{messageId:guid}")]
+        public async Task<IActionResult> GetNextMessages(Guid conversationId, Guid messageId)
         {
             try
             {
-                // Validate input
+                var messageList = await _conversationService.GetNextMessagesAsync(conversationId, messageId);
+                return Ok(new { success = true, data = messageList });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching messages.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateConversationAsync(ConversationDTO conversation)
+        {
+            if (conversation.Users == null || !conversation.Users.Any())
+                return BadRequest(new { success = false, message = "The conversation must include at least one valid user." });
+
+            try
+            {
+                var loggedInUserId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 var userList = conversation.Users
                     .Where(u => u.UserId != null)
                     .Select(u => u.UserId!.Value)
                     .ToList();
 
-                if (!userList.Any())
-                {
-                    return BadRequest("The conversation must include at least one valid user.");
-                }
-
-                // Get the logged-in user's ID
-                var loggedInUserId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-
-                // Ensure the logged-in user is the first in the list
                 if (userList.Contains(loggedInUserId))
                 {
                     userList.Remove(loggedInUserId);
-                    userList.Insert(0, loggedInUserId); // Add at the first position
+                    userList.Insert(0, loggedInUserId);
                 }
 
                 var name = string.IsNullOrWhiteSpace(conversation.Name) ? "Unnamed Conversation" : conversation.Name;
                 await _conversationService.CreateConversation(userList, name);
 
-                return Ok("Conversation created successfully.");
+                return Ok(new { success = true, message = "Conversation created successfully." });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+                _logger.LogError(ex, "Error creating conversation.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = ex.Message });
             }
         }
 
-        // Leave a conversation
         [HttpPost("leave/{conversationId:guid}")]
-        public async Task<IActionResult> LeaveAsync(Guid conversationId)
+        public async Task<IActionResult> LeaveConversationAsync(Guid conversationId)
         {
             try
             {
                 var userId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-
                 await _conversationService.LeaveConversation(userId, conversationId);
-                return Ok("You have successfully left the conversation.");
-            }
-            catch (FormatException)
-            {
-                return BadRequest("Invalid conversation ID format.");
+                return Ok(new { success = true, message = "You have successfully left the conversation." });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+                _logger.LogError(ex, "Error leaving conversation.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { success = false, message = ex.Message });
             }
         }
 
-        // Send message to conversation
         [HttpPost("{conversationId:guid}/send")]
-        public async Task<IActionResult> SendMessageAsync(Guid conversationId, [FromBody] MessageDTO message)
+        public async Task<IActionResult> SendMessageAsync(Guid conversationId, [FromForm] SendMessageRequest request)
         {
             try
             {
+                var userId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var message = JsonSerializer.Deserialize<MessageDTO>(request.Message);
+                message.SenderId = userId;
                 message.ConversationId = conversationId;
+                message.Files = request.Files;
                 await _conversationService.SendMessage(message);
-                return Ok();
+                return Ok(new { success = true, message = "Message sent successfully." });
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return BadRequest(e.Message);
+                _logger.LogError(ex, "Error sending message.");
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
     }

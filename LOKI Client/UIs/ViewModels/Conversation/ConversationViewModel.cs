@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Client.ApiClients.Services;
 using LOKI_Client.Models;
 using LOKI_Model.Models;
@@ -15,30 +17,37 @@ namespace LOKI_Client.UIs.ViewModels.Conversation
     public partial class ConversationViewModel : ObservableObject
     {
         private readonly FriendshipService _friendshipService;
+        private readonly IConversationService _conversationService;
 
         [ObservableProperty]
-        private ObservableCollection<UserDTO> friendList;
-        public ConversationViewModel(FriendshipService friendshipService)
+        private ObservableCollection<ConversationDTO> conversations;
+        public RelayCommand<ConversationDTO> OpenConversationCommand => new RelayCommand<ConversationDTO>(OpenConversation);
+        public ConversationViewModel(FriendshipService friendshipService, IConversationService conversationService)
         {
             _friendshipService = friendshipService;
+            _conversationService = conversationService;
             RegisterService();
         }
         private void RegisterService()
         {
-            WeakReferenceMessenger.Default.Register<RefreshFriendListRequest>(this, async (r, action) => { await RefreshFriendList(action.Token); });
+            WeakReferenceMessenger.Default.Register<RefreshConversationListRequest>(this, async (r, action) => { await RefreshConversationListAsync(action.Token); });
         }
-        private async Task RefreshFriendList(string token)
+        private async Task RefreshConversationListAsync(string token)
         {
             try
             {
-                var result = await _friendshipService.GetFriendsAsync(token);
+                var result = await _conversationService.GetConversationsAsync();
                 if (result == null) { return; }
-                FriendList = new ObservableCollection<UserDTO>(result);
+                Conversations = new ObservableCollection<ConversationDTO>(result);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+        private void OpenConversation(ConversationDTO conversation)
+        {
+            WeakReferenceMessenger.Default.Send(new RefreshConversationMessages(conversation));
         }
     }
 }

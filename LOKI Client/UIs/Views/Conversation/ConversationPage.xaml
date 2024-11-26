@@ -9,8 +9,8 @@
 
     <StackPanel Background="Beige" Width="200">
         <Grid Height="100" Background="DarkGreen"></Grid>
-        <ScrollViewer>
-            <ItemsControl ItemsSource="{Binding ConversationList}">
+        <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
+            <ItemsControl ItemsSource="{Binding Conversations}">
                 <ItemsControl.ItemTemplate>
                     <StaticResource ResourceKey="ConversationItem" />
                 </ItemsControl.ItemTemplate>

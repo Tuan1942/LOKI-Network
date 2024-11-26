@@ -18,26 +18,48 @@ namespace LOKI_Client.Models
 
         public UserDTO User { get; set; }
     }
-    public class RefreshFriendListRequest : ValueChangedMessage<string>
+    public class RefreshConversationListRequest : ValueChangedMessage<string>
     {
-        public RefreshFriendListRequest(string token) : base(token)
+        public RefreshConversationListRequest(string token) : base(token)
         {
             Token = token;
         }
 
         public string Token { get; set; }
     }
+    public class AddMessageRequest : ValueChangedMessage<MessageDTO>
+    {
+        public AddMessageRequest(MessageDTO message) : base(message)
+        {
+            Message = message;
+        }
+
+        public MessageDTO Message { get; set; }
+    }
+    public class RefreshConversationMessages : ValueChangedMessage<ConversationDTO>
+    {
+        public RefreshConversationMessages(ConversationDTO conversation) : base(conversation)
+        {
+            Conversation = conversation;
+        }
+
+        public ConversationDTO Conversation { get; set; }
+    }
     public class OpenLoginPageRequest
     {
 
     }
-    public class ConnectWebSocketRequest : ValueChangedMessage<UserDTO>
+    public class ScrollToBottomRequest
     {
-        public ConnectWebSocketRequest(UserDTO user) : base(user)
+
+    }
+    public class ConnectWebSocketRequest : ValueChangedMessage<string>
+    {
+        public ConnectWebSocketRequest(string token) : base(token)
         {
-            User = user;
+            Token = token;
         }
 
-        public UserDTO User { get; set; }
+        public string Token { get; set; }
     }
 }

@@ -14,6 +14,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using LOKI_Client.Extensions.Authorize;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LOKI_Client.UIs.ViewModels
 {
@@ -23,25 +25,9 @@ namespace LOKI_Client.UIs.ViewModels
         #region Properties
 
         private readonly WebSocketService _webSocketService;
-        private UserDTO localUser { get; set; }
-        private UserDTO LocalUser
-        {
-            get { return localUser; }
-            set
-            {
-                localUser = value;
-                OnPropertyChanged(nameof(LocalUser));
-                OnPropertyChanged(nameof(LoginPageVisible));
-            }
-        }
-        public bool LoginPageVisible
-        {
-            get
-            {
-                return LocalUser == null;
-            }
-        }
 
+        [ObservableProperty]
+        private bool loggedIn = true;
         #endregion
 
         #region Command
@@ -53,7 +39,7 @@ namespace LOKI_Client.UIs.ViewModels
         public HomeViewModel(WebSocketService webSocketService)
         {
             _webSocketService = webSocketService;
-            WeakReferenceMessenger.Default.Register<ConnectWebSocketRequest>(this, async (r, action) => { await ConnectWebSocket(action.User); });
+            WeakReferenceMessenger.Default.Register<ConnectWebSocketRequest>(this, async (r, action) => { await ConnectWebSocket(action.Token); });
             RefreshConnection();
             Application.Current.Exit += async (sender, args) =>
             {
@@ -72,13 +58,12 @@ namespace LOKI_Client.UIs.ViewModels
         {
             try
             {
-                var userJson = ApplicationSettingsHelper.GetSetting(nameof(LocalUser));
-                LocalUser = JsonSerializer.Deserialize<UserDTO>(userJson);
-                await ConnectWebSocket(LocalUser);
+                var userProvider = App.Current.Services.GetRequiredService<UserProvider>();
+                await ConnectWebSocket(userProvider.User?.Token);
             }
             catch (Exception ex)
             {
-                // ReLogin fail
+                LoggedIn = false;
                 WeakReferenceMessenger.Default.Send(new OpenLoginPageRequest());
             }
         }
@@ -88,26 +73,23 @@ namespace LOKI_Client.UIs.ViewModels
             await _webSocketService.SendMessageAsync(message);
         }
 
-        private async Task ConnectWebSocket(UserDTO user)
+        private async Task ConnectWebSocket(string token)
         {
-            LocalUser = user;
-            var content = JsonSerializer.Serialize(localUser);
-            ApplicationSettingsHelper.SaveSetting(nameof(LocalUser), content);
-
-            await _webSocketService.ConnectAsync(LocalUser.Token);
-            WeakReferenceMessenger.Default.Send(new RefreshFriendListRequest(user.Token));
-            await _webSocketService.ReceiveMessagesAsync();
-
-            LocalUser = null;
+            try
+            {
+                LoggedIn = await _webSocketService.ConnectAsync(token);
+                WeakReferenceMessenger.Default.Send(new RefreshConversationListRequest(token));
+                await _webSocketService.ReceiveMessagesAsync();
+            }
+            catch (Exception) { LoggedIn = false; }
         }
 
         #endregion
 
         private async Task LogoutAsync()
         {
-            LocalUser = null;
-            ApplicationSettingsHelper.SaveSetting(nameof(LocalUser), string.Empty);
             await _webSocketService.CloseAsync();
+            LoggedIn = false;
         }
     }
 

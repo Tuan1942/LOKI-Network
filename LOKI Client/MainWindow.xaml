@@ -11,6 +11,7 @@
         MinHeight="600" MinWidth="1000">
     <Window.Resources>
         <vc:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <vc:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -27,16 +28,9 @@
             </Grid>
         </StackPanel>
         <Grid Grid.Column="1" Background="red">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="50"/>
-            </Grid.RowDefinitions>
             <Frame Source="../UIs/Views/Message/DirectMessagePage.xaml"/>
-            <Grid Grid.Row="1" Background="Blue">
-                
-            </Grid>
         </Grid>
-        <Grid Grid.ColumnSpan="2" Visibility="{Binding LoginPageVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Grid.ColumnSpan="2" Visibility="{Binding LoggedIn, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
             <Grid Opacity="0.3" Background="Black"/>
             <Frame Source="../UIs/Views/Account/LoginPage.xaml"/>
         </Grid>

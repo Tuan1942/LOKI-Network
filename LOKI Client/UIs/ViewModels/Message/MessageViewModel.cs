@@ -1,4 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using LOKI_Client.ApiClients.Interfaces;
+using LOKI_Client.ApiClients.Services;
+using LOKI_Client.Models;
 using LOKI_Model.Models;
 using System;
 using System.Collections.Generic;
@@ -6,18 +11,124 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace LOKI_Client.UIs.ViewModels.Message
 {
     public partial class MessageViewModel : ObservableObject
     {
+        private readonly IConversationService _conversationService;
         [ObservableProperty]
         ObservableCollection<MessageDTO> messages;
-        public MessageViewModel()
+
+        [ObservableProperty]
+        private ConversationDTO conversation;
+
+        [ObservableProperty]
+        private string inputContent;
+
+        [ObservableProperty]
+        private bool isLoadingMessages;
+
+        public RelayCommand SendMessageCommand => new RelayCommand(async () => await SendMessage());
+        public RelayCommand<ScrollViewer> LoadNextMessagesCommand => new RelayCommand<ScrollViewer>(async (s) => await CheckForLoadNextMessages(s));
+
+        public MessageViewModel(IConversationService conversationService)
         {
-            Messages = new ObservableCollection<MessageDTO>()
+            _conversationService = conversationService;
+            RegisterServices();
+        }
+
+        private async void RegisterServices()
+        {
+            WeakReferenceMessenger.Default.Register<RefreshConversationMessages>(this, async (r, action) => await RefreshMessages(action.Conversation));
+            WeakReferenceMessenger.Default.Register<AddMessageRequest>(this, async (r, action) => await AddMessage(action.Message));
+        }
+
+        async Task RefreshMessages(ConversationDTO conversation)
+        {
+            try
             {
-new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Hello, how are you?", SentDate = DateTime.Now.AddMinutes(-10) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "I'm good, thanks!", SentDate = DateTime.Now.AddMinutes(-9) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "What are you up to?", SentDate = DateTime.Now.AddMinutes(-8) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Just working on a project.", SentDate = DateTime.Now.AddMinutes(-7) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Sounds interesting!", SentDate = DateTime.Now.AddMinutes(-6) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Yeah, it's quite challenging.", SentDate = DateTime.Now.AddMinutes(-5) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Need any help?", SentDate = DateTime.Now.AddMinutes(-4) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "That would be great, thanks!", SentDate = DateTime.Now.AddMinutes(-3) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "No problem, what do you need?", SentDate = DateTime.Now.AddMinutes(-2) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Can you review my code?", SentDate = DateTime.Now.AddMinutes(-1) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Sure, send it over.", SentDate = DateTime.Now }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Here it is.", SentDate = DateTime.Now.AddSeconds(-50) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Got it, let me take a look.", SentDate = DateTime.Now.AddSeconds(-40) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Thanks!", SentDate = DateTime.Now.AddSeconds(-30) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "No worries.", SentDate = DateTime.Now.AddSeconds(-20) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "How's it looking?", SentDate = DateTime.Now.AddSeconds(-10) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Looks good, just a few tweaks needed.", SentDate = DateTime.Now }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Great, I'll fix them.", SentDate = DateTime.Now.AddSeconds(10) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Let me know if you need anything else.", SentDate = DateTime.Now.AddSeconds(20) }, new MessageDTO { MessageId = Guid.NewGuid(), SenderId = Guid.NewGuid(), Content = "Will do, thanks again!", SentDate = DateTime.Now.AddSeconds(30) }            };
+                Conversation = conversation;
+                var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1);
+                Messages = new ObservableCollection<MessageDTO>(messageList);
+                WeakReferenceMessenger.Default.Send(new ScrollToBottomRequest());
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+        private async Task CheckForLoadNextMessages(ScrollViewer scrollViewer)
+        {
+            if (scrollViewer == null || IsLoadingMessages) return;
+            if (scrollViewer.VerticalOffset == 0)
+            {
+                await GetNextMessages(scrollViewer);
+            }
+        }
+        private async Task GetNextMessages(ScrollViewer scrollViewer)
+        {
+            if (IsLoadingMessages) return; // Avoid concurrent loads
+
+            IsLoadingMessages = true;
+
+            try
+            {
+                var lastMessage = Messages.FirstOrDefault();
+                if (lastMessage == null) return;
+
+                // Capture the current scroll position and extent height
+                double previousOffset = scrollViewer.VerticalOffset;
+                double previousExtentHeight = scrollViewer.ExtentHeight;
+
+                // Fetch messages and insert them at the top
+                var messageList = await _conversationService.GetNextMessagesAsync(Conversation.ConversationId, lastMessage.MessageId);
+
+                foreach (var message in messageList)
+                {
+                    Messages.Insert(0, message);
+                }
+
+                await Task.Delay(1);
+                await scrollViewer.Dispatcher.InvokeAsync(() =>
+                {
+                    // Restore the scroll position
+                    double newExtentHeight = scrollViewer.ExtentHeight;
+                    double heightDifference = newExtentHeight - previousExtentHeight;
+                    scrollViewer.ScrollToVerticalOffset(previousOffset + heightDifference);
+                });
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally
+            {
+                IsLoadingMessages = false;
+            }
+        }
+
+        private async Task SendMessage()
+        {
+            try
+            {
+                var message = new MessageDTO
+                {
+                    ConversationId = Conversation.ConversationId,
+                    Content = InputContent,
+                };
+                InputContent = string.Empty;
+                await _conversationService.SendMessageAsync(Conversation.ConversationId, message);
+            }
+            catch (Exception ex) { }
+        }
+
+        private async Task AddMessage(MessageDTO message)
+        {
+            if (message.ConversationId == Conversation.ConversationId)
+            {
+                Messages.Add(message);
+            }
         }
     }
 }

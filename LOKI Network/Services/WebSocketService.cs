@@ -49,13 +49,16 @@ namespace LOKI_Network.Services
         }
 
         // Broadcast a message to all participants in a conversation
-        public async Task BroadcastMessageAsync(Guid conversationId, string message, Func<Guid, List<Guid>> getParticipantIds)
+        public async Task BroadcastMessageAsync(MessageDTO message, List<Guid> participantIds)
         {
-            var participantIds = getParticipantIds(conversationId);
-
             foreach (var userId in participantIds)
             {
-                await SendMessageToUserAsync(userId, new WebSocketMessageDTO { });
+                await SendMessageToUserAsync(userId, new WebSocketMessageDTO 
+                {
+                    Type = "newMessage",
+                    JsonObj = JsonSerializer.Serialize(message),
+                    ObjType = nameof(MessageDTO)
+                });
             }
         }
 

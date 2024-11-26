@@ -4,14 +4,60 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:LOKI_Client.UIs.Views.Message"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       mc:Ignorable="d" 
       Title="DirectMessagePage">
 
-    <ScrollViewer HorizontalAlignment="Stretch" Background="LightGray">
-        <ItemsControl ItemsSource="{Binding Messages}">
-            <ItemsControl.ItemTemplate>
-                <StaticResource ResourceKey="DirectMessageItem" />
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </ScrollViewer>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <!-- Main scrollable content takes the remaining space -->
+            <RowDefinition Height="Auto" />
+            <!-- The input panel at the bottom -->
+        </Grid.RowDefinitions>
+
+        <!-- Scrollable Messages Section -->
+        <ScrollViewer Name="MainContent" Loaded="ScrollViewer_Loaded" Grid.Row="0" HorizontalAlignment="Stretch" Background="LightGray" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Messages}">
+                <ItemsControl.ItemTemplate>
+                    <StaticResource ResourceKey="DirectMessageItem" />
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="ScrollChanged">
+                    <i:InvokeCommandAction Command="{Binding LoadNextMessagesCommand}"
+                               CommandParameter="{Binding ElementName=MainContent}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </ScrollViewer>
+
+        <!-- Input Section -->
+        <Grid Height="50" Background="Blue" Grid.Row="1">
+            <Grid.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Height" Value="40"/>
+                    <Setter Property="Margin" Value="5"/>
+                </Style>
+                <Style TargetType="TextBox">
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                </Style>
+            </Grid.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Button>
+                    <Image Source="https://img.icons8.com/ios-filled/50/FFFFFF/camera.png"/>
+                </Button>
+                <Button>
+                    <Image Source="https://img.icons8.com/ios-filled/50/FFFFFF/video.png"/>
+                </Button>
+            </StackPanel>
+            <TextBox Text="{Binding InputContent}" Grid.Column="1" x:Name="MessageEntry" />
+            <Button Grid.Column="2" Content="Send" Command="{Binding SendMessageCommand}"/>
+        </Grid>
+    </Grid>
+
 </Page>

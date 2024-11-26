@@ -1,4 +1,6 @@
-﻿using LOKI_Model.Models;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LOKI_Client.Models;
+using LOKI_Model.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,32 +15,13 @@ namespace LOKI_Client.ApiClients.Services
     {
         private readonly Uri _baseWebSocketUri;
         private ClientWebSocket? _webSocket;
-        private UserDTO _user;
-        public UserDTO User
-        {  
-            get 
-            { 
-                return new UserDTO
-                {
-                    UserId = _user.UserId,
-                    Username = _user.Username,
-                    Email = _user.Email,
-                    Gender = _user.Gender,
-                    ProfilePictureUrl = _user.ProfilePictureUrl,
-                }; 
-            }
-            set
-            {
-                _user = value;
-            }
-        }
 
         public WebSocketService(Uri baseWebSocketUri)
         {
             _baseWebSocketUri = baseWebSocketUri;
         }
 
-        public async Task ConnectAsync(string token)
+        public async Task<bool> ConnectAsync(string token)
         {
             _webSocket = new ClientWebSocket();
 
@@ -53,11 +36,13 @@ namespace LOKI_Client.ApiClients.Services
                 // Connect to the WebSocket server
                 await _webSocket.ConnectAsync(webSocketUri, CancellationToken.None);
                 Console.WriteLine("WebSocket connected!");
+                return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"WebSocket connection failed: {ex.Message}");
+                throw new Exception($"WebSocket connection failed: {ex.Message}");
             }
+            return false;
         }
 
         public async Task CloseAsync()
@@ -146,6 +131,11 @@ namespace LOKI_Client.ApiClients.Services
                     case "notification":
                         break;
 
+                    case "newMessage":
+                        var newMessage = (MessageDTO)DeserializeWebSocketMessage(messageObj);
+                        WeakReferenceMessenger.Default.Send(new AddMessageRequest(newMessage));
+                        break;
+
                     default:
                         break;
                 }
@@ -154,6 +144,19 @@ namespace LOKI_Client.ApiClients.Services
             {
                 return;
             }
+        }
+        public object DeserializeWebSocketMessage(WebSocketMessageDTO message)
+        {
+            // Map ObjType to actual Type
+            Type targetType = message.ObjType switch
+            {
+                "UserDTO" => typeof(UserDTO),
+                "MessageDTO" => typeof(MessageDTO),
+                _ => throw new InvalidOperationException($"Unknown type: {message.ObjType}")
+            };
+
+            // Deserialize JsonObj to the correct type
+            return JsonSerializer.Deserialize(message.JsonObj, targetType);
         }
     }
 }

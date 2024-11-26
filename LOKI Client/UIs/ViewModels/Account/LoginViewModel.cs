@@ -2,8 +2,10 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using LOKI_Client.ApiClients.Interfaces;
+using LOKI_Client.Extensions.Authorize;
 using LOKI_Client.Models;
 using LOKI_Model.Models;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -86,7 +88,9 @@ namespace LOKI_Client.UIs.ViewModels.Account
                 if (user != null)
                 {
                     StatusMessage = "Login successful! Connecting to WebSocket...";
-                    ConnectWebSocket(user);
+                    var userProvider = App.Current.Services.GetRequiredService<UserProvider>();
+                    userProvider.User = user;
+                    ConnectWebSocket(user.Token);
                 }
                 else
                 {
@@ -102,9 +106,9 @@ namespace LOKI_Client.UIs.ViewModels.Account
                 IsLoading = false;
             }
         }
-        private void ConnectWebSocket(UserDTO user)
+        private void ConnectWebSocket(string token)
         {
-            WeakReferenceMessenger.Default.Send(new ConnectWebSocketRequest(user));
+            WeakReferenceMessenger.Default.Send(new ConnectWebSocketRequest(token));
         }
     }
 }

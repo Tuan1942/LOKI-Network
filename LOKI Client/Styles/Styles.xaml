@@ -60,31 +60,38 @@
 
     <DataTemplate x:Key="ConversationItem">
         <StackPanel Orientation="Horizontal" Margin="5" Background="AliceBlue">
-            <StackPanel.Resources>
-                <Style TargetType="StackPanel">
-                    <Setter Property="Margin" Value="5"/>
-                </Style>
-            </StackPanel.Resources>
-            <Border CornerRadius="100" Background="Black" Width="50" Height=" 50">
-                <Image Margin="5" Source="{Binding ProfilePictureUrl}"/>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseLeftButtonUp">
+                    <i:InvokeCommandAction Command="{Binding DataContext.OpenConversationCommand, RelativeSource={RelativeSource AncestorType=Page}}" 
+                                   CommandParameter="{Binding}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <!-- Profile Picture -->
+            <Border CornerRadius="25" Background="Black" Width="50" Height="50">
+                <Image Margin="5" Source="{Binding ProfilePictureUrl}" Stretch="UniformToFill"/>
             </Border>
-            <StackPanel Margin="5,0,0,0">
-                <TextBlock Text="{Binding Username}"/>
+
+            <!-- Conversation Details -->
+            <StackPanel Margin="5,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
             </StackPanel>
         </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="DirectMessageItem">
-        <StackPanel Orientation="Horizontal" Name="Parent" MinHeight="50" Margin="0,0,0,10">
-            <Border VerticalAlignment="Top" Visibility="Visible" CornerRadius="100" Background="Gray">
-                <Image Margin="5" Width="40" Height=" 40" Source="{Binding ProfilePictureUrl}"/>
-            </Border>
-            <Border CornerRadius="8" Background="AliceBlue" BorderBrush="AliceBlue" BorderThickness="1">
-                <StackPanel MinHeight="30">
-                    <TextBlock Text="Full name"/>
-                    <TextBlock Text="{Binding Content}"/>
-                </StackPanel>
-            </Border>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Name="Parent" MinHeight="50" Margin="0,0,0,10">
+                <Border VerticalAlignment="Top" Visibility="Visible" CornerRadius="100" Background="Gray">
+                    <Image Margin="5" Width="40" Height=" 40" Source="{Binding ProfilePictureUrl}"/>
+                </Border>
+                <Border CornerRadius="8" Background="AliceBlue" BorderBrush="AliceBlue" BorderThickness="1">
+                    <StackPanel MinHeight="30">
+                        <TextBlock Text="Full name"/>
+                        <TextBlock Text="{Binding Content}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <TextBlock Text="{Binding SentDate}"/>
         </StackPanel>
     </DataTemplate>
 

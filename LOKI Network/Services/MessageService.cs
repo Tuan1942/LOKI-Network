@@ -20,6 +20,11 @@ public class MessageService : IMessageService
         _webSocketService = webSocketService;
     }
 
+    public async Task<MessageDTO> GetMessageAsync(Guid messageId)
+    {
+        return new MessageDTO { MessageId = messageId };
+    }
+
     public async Task<Guid> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files)
     {
         var message = new Message
