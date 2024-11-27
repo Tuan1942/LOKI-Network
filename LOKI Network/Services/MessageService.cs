@@ -22,8 +22,31 @@ public class MessageService : IMessageService
 
     public async Task<MessageDTO> GetMessageAsync(Guid messageId)
     {
-        var message = await _dbContext.FindAsync<MessageDTO>(messageId);
-        return message;
+        var m = await _dbContext.Messages.Include(m => m.Attachments).FirstAsync(m => m.MessageId == messageId);
+        return new MessageDTO
+            {
+            MessageId = m.MessageId,
+                User = new UserDTO
+                {
+                    Username = m.Sender?.Username,
+                    FirstName = m.Sender?.FirstName,
+                    LastName = m.Sender?.LastName,
+                    MiddleName = m.Sender?.MiddleName,
+                    ProfilePictureUrl = m.Sender?.ProfilePictureUrl,
+                    Email = m.Sender?.Email,
+                    Gender = m.Sender.Gender,
+                },
+                ConversationId = m.ConversationId,
+                Content = m.Content,
+                SentDate = m.SentDate,
+                Attachments = m.Attachments?.Select(a => new AttachmentDTO
+                {
+                    AttachmentId = a.AttachmentId,
+                    FileName = a.FileName,
+                    FileType = a.FileType,
+                    FileUrl = a.FileUrl,
+                }).ToList()
+            };
     }
 
     public async Task<Guid> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files)

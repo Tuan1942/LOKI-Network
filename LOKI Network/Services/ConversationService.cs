@@ -14,14 +14,17 @@ namespace LOKI_Network.Services
         private readonly IFileService _fileService;
         private readonly IWebSocketService _webSocketService;
         private readonly IUserService _userService;
+        private readonly IMessageService _messageService;
         public ConversationService(
             LokiContext lokiContext, 
             IWebSocketService webSocketService,
-            IUserService userService)
+            IUserService userService,
+            IMessageService messageService)
         {
             _dbContext = lokiContext;
             _webSocketService = webSocketService;
             _userService = userService;
+            _messageService = messageService;
         }
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
         {
@@ -269,7 +272,9 @@ namespace LOKI_Network.Services
                 .Select(p => p.UserId)
                 .Select(g => g.Value)
                 .ToList();
-            await _webSocketService.BroadcastMessageAsync(inputMessage, participantList);
+
+            var messageDTO = await _messageService.GetMessageAsync(message.MessageId);
+            await _webSocketService.BroadcastMessageAsync(messageDTO, participantList);
 
         }
         public async Task<List<MessageDTO>> GetNextMessagesAsync(Guid conversationId, Guid lastMessageId, int pageSize = 10)
@@ -315,7 +320,10 @@ namespace LOKI_Network.Services
                 SentDate = m.SentDate,
                 Attachments = m.Attachments?.Select(a => new AttachmentDTO
                 {
-                    AttachmentId = a.AttachmentId
+                    AttachmentId = a.AttachmentId,
+                    FileName = a.FileName,
+                    FileType = a.FileType,
+                    FileUrl = a.FileUrl,
                 }).ToList()
             }).ToList();
         }

@@ -1,6 +1,11 @@
 ﻿using LOKI_Model.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace LOKI_Network.Helpers
+namespace LOKI_Client.Models.Helper
 {
     public static class FileHelper
     {
@@ -33,16 +38,7 @@ namespace LOKI_Network.Helpers
                 return FileType.Other;
             }
         }
-        public static string GetContentType(string path)
-        {
-            var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
-            if (!provider.TryGetContentType(path, out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-            return contentType;
-        }
-        private static string GetMimeType(string fileExtension)
+        public static string GetMimeType(string fileExtension)
         {
             return fileExtension.ToLower() switch
             {

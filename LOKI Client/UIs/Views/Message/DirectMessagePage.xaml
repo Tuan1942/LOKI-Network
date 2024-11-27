@@ -32,32 +32,41 @@
         </ScrollViewer>
 
         <!-- Input Section -->
-        <Grid Height="50" Background="Blue" Grid.Row="1">
-            <Grid.Resources>
-                <Style TargetType="Button">
-                    <Setter Property="Height" Value="40"/>
-                    <Setter Property="Margin" Value="5"/>
-                </Style>
-                <Style TargetType="TextBox">
-                    <Setter Property="VerticalContentAlignment" Value="Center"/>
-                </Style>
-            </Grid.Resources>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal">
-                <Button>
-                    <Image Source="https://img.icons8.com/ios-filled/50/FFFFFF/camera.png"/>
-                </Button>
-                <Button>
-                    <Image Source="https://img.icons8.com/ios-filled/50/FFFFFF/video.png"/>
-                </Button>
-            </StackPanel>
-            <TextBox Text="{Binding InputContent}" Grid.Column="1" x:Name="MessageEntry" />
-            <Button Grid.Column="2" Content="Send" Command="{Binding SendMessageCommand}"/>
-        </Grid>
+        <StackPanel Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding SelectedFiles}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding FileName}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Grid Height="50" Background="Blue">
+                <Grid.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="Height" Value="40"/>
+                        <Setter Property="Margin" Value="5"/>
+                    </Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
+                </Grid.Resources>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Button Command="{Binding SelectFilesCommand}">
+                        <Image Source="https://img.icons8.com/ios-filled/50/FFFFFF/camera.png"/>
+                    </Button>
+                    <Button>
+                        <Image Source="https://img.icons8.com/ios-filled/50/FFFFFF/video.png"/>
+                    </Button>
+                </StackPanel>
+                <TextBox Text="{Binding InputContent}" Grid.Column="1" x:Name="MessageEntry" />
+                <Button Grid.Column="2" Content="Send" Command="{Binding SendMessageCommand}"/>
+            </Grid>
+        </StackPanel>
     </Grid>
 
 </Page>

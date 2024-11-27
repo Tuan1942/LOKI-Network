@@ -2,15 +2,14 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using LOKI_Client.ApiClients.Interfaces;
-using LOKI_Client.ApiClients.Services;
 using LOKI_Client.Models;
+using LOKI_Client.Models.Helper;
 using LOKI_Model.Models;
-using System;
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.Win32;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using System.Windows.Controls;
 
 namespace LOKI_Client.UIs.ViewModels.Message
@@ -29,6 +28,10 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
         [ObservableProperty]
         private bool isLoadingMessages;
+        public RelayCommand SelectFilesCommand => new RelayCommand(SelectFiles);
+
+        [ObservableProperty]
+        private List<IFormFile> selectedFiles;
 
         public RelayCommand SendMessageCommand => new RelayCommand(async () => await SendMessage());
         public RelayCommand<ScrollViewer> LoadNextMessagesCommand => new RelayCommand<ScrollViewer>(async (s) => await CheckForLoadNextMessages(s));
@@ -116,8 +119,10 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 {
                     ConversationId = Conversation.ConversationId,
                     Content = InputContent,
+                    Files = SelectedFiles
                 };
                 InputContent = string.Empty;
+                SelectedFiles = null;
                 await _conversationService.SendMessageAsync(Conversation.ConversationId, message);
             }
             catch (Exception ex) { }
@@ -128,6 +133,33 @@ namespace LOKI_Client.UIs.ViewModels.Message
             if (message.ConversationId == Conversation.ConversationId)
             {
                 Messages.Add(message);
+            }
+        }
+        private void SelectFiles()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Multiselect = true,
+                Filter = "All Files|*.*",
+                Title = "Select Files to Attach"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                selectedFiles = dialog.FileNames
+                    .Select(filePath =>
+                    {
+                        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                        var fileInfo = new FileInfo(filePath);
+
+                        return new FormFile(stream, 0, fileInfo.Length, "file", fileInfo.Name)
+                        {
+                            Headers = new HeaderDictionary(), // Optional: Add headers if needed
+                            ContentType = FileHelper.GetMimeType(fileInfo.Extension) // Set the ContentType
+                        };
+                    })
+                    .Cast<IFormFile>()
+                    .ToList();
             }
         }
     }
