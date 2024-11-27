@@ -44,7 +44,7 @@ namespace LOKI_Client.Models.Helper
             {
                 ".jpg" or ".jpeg" => "image/jpeg",
                 ".png" => "image/png",
-                ".gif" => "image/gif",
+                ".gif" or "jfif" => "image/gif",
                 ".pdf" => "application/pdf",
                 ".txt" => "text/plain",
                 ".doc" or ".docx" => "application/msword",

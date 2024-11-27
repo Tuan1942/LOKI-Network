@@ -19,12 +19,14 @@ namespace LOKI_Network.Services
             LokiContext lokiContext, 
             IWebSocketService webSocketService,
             IUserService userService,
-            IMessageService messageService)
+            IMessageService messageService,
+            IFileService fileService)
         {
             _dbContext = lokiContext;
             _webSocketService = webSocketService;
             _userService = userService;
             _messageService = messageService;
+            _fileService = fileService;
         }
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
         {
@@ -225,7 +227,11 @@ namespace LOKI_Network.Services
                 SentDate = m.SentDate,
                 Attachments = m.Attachments?.Select(a => new AttachmentDTO
                 {
-                    AttachmentId = a.AttachmentId
+                    AttachmentId = a.AttachmentId,
+                    CreatedDate = a.CreatedDate,
+                    FileName = a.FileName,
+                    FileType = a.FileType,
+                    FileUrl = a.FileUrl
                 }).ToList()
             }).OrderBy(m => m.SentDate).ToList();
         }
@@ -248,16 +254,15 @@ namespace LOKI_Network.Services
                 // Handle each file in the list
                 foreach (var file in inputMessage.Files)
                 {
-                    FileType fileType = FileType.Other;
-                    var fileUrl = await _fileService.UploadFileAsync(file, fileType);
+                    var fileResult = await _fileService.UploadFileAsync(file);
 
                     var attachment = new Attachment
                     {
                         AttachmentId = Guid.NewGuid(),
                         MessageId = message.MessageId,
-                        FileUrl = fileUrl,
+                        FileUrl = fileResult.FilePath,
                         FileName = file.FileName,
-                        FileType = FileType.Other,
+                        FileType = fileResult.FileType,
                         CreatedDate = DateTime.UtcNow
                     };
 
@@ -321,10 +326,11 @@ namespace LOKI_Network.Services
                 Attachments = m.Attachments?.Select(a => new AttachmentDTO
                 {
                     AttachmentId = a.AttachmentId,
+                    CreatedDate = a.CreatedDate,
                     FileName = a.FileName,
                     FileType = a.FileType,
-                    FileUrl = a.FileUrl,
-                }).ToList()
+                    FileUrl = a.FileUrl
+                }).ToList().ToList()
             }).ToList();
         }
     }

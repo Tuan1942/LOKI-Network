@@ -155,7 +155,7 @@ namespace LOKI_Network.DbContexts
         public Guid MessageId { get; set; } // Primary Key
         public Guid ConversationId { get; set; } // Foreign Key
         public Guid SenderId { get; set; } // Foreign Key
-        public string Content { get; set; }
+        public string? Content { get; set; }
         public MessageType MessageType { get; set; }
         public DateTime SentDate { get; set; }
         public bool IsRead { get; set; }

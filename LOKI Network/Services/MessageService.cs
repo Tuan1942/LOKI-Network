@@ -39,13 +39,14 @@ public class MessageService : IMessageService
                 ConversationId = m.ConversationId,
                 Content = m.Content,
                 SentDate = m.SentDate,
-                Attachments = m.Attachments?.Select(a => new AttachmentDTO
-                {
-                    AttachmentId = a.AttachmentId,
-                    FileName = a.FileName,
-                    FileType = a.FileType,
-                    FileUrl = a.FileUrl,
-                }).ToList()
+            Attachments = m.Attachments?.Select(a => new AttachmentDTO
+            {
+                AttachmentId = a.AttachmentId,
+                CreatedDate = a.CreatedDate,
+                FileName = a.FileName,
+                FileType = a.FileType,
+                FileUrl = a.FileUrl
+            }).ToList()
             };
     }
 
@@ -66,13 +67,13 @@ public class MessageService : IMessageService
         foreach (var file in files)
         {
             FileType fileType = FileType.Other;
-            var fileUrl = await _fileService.UploadFileAsync(file, fileType);
+            var fileResult = await _fileService.UploadFileAsync(file);
 
             var attachment = new Attachment
             {
                 AttachmentId = Guid.NewGuid(),
                 MessageId = message.MessageId,
-                FileUrl = fileUrl,
+                FileUrl = fileResult.FilePath,
                 FileName = file.FileName,
                 FileType = FileType.Other,
                 CreatedDate = DateTime.UtcNow

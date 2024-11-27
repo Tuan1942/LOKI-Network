@@ -5,7 +5,7 @@ namespace LOKI_Network.Interface
 {
     public interface IFileService
     {
-        Task<string> UploadFileAsync(IFormFile file, FileType fileType);
+        Task<(string FilePath, FileType FileType)> UploadFileAsync(IFormFile file);
         Task<string> GetFileUrl(Guid attachmentId);
         bool DeleteFile(string filePath);
     }

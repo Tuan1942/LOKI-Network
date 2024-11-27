@@ -10,7 +10,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\" />
+    <None Remove="Resources\FileIcons\audio_icon.png" />
+    <None Remove="Resources\FileIcons\doc_icon.png" />
+    <None Remove="Resources\FileIcons\etc_icon.png" />
+    <None Remove="Resources\FileIcons\oth_icon.png" />
+    <None Remove="Resources\FileIcons\pdf_icon.png" />
+    <None Remove="Resources\FileIcons\ppt_icon.png" />
+    <None Remove="Resources\FileIcons\video_icon.png" />
+    <None Remove="Resources\FileIcons\xls_icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Styles\DataTemplate\" />
     <Folder Include="UIs\ViewModels\CommonComponents\" />
   </ItemGroup>
@@ -26,6 +36,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LOKI Model\LOKI Model.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\FileIcons\audio_icon.png" />
+    <Resource Include="Resources\FileIcons\doc_icon.png" />
+    <Resource Include="Resources\FileIcons\oth_icon.png" />
+    <Resource Include="Resources\FileIcons\pdf_icon.png" />
+    <Resource Include="Resources\FileIcons\ppt_icon.png" />
+    <Resource Include="Resources\FileIcons\video_icon.png" />
+    <Resource Include="Resources\FileIcons\xls_icon.png" />
   </ItemGroup>
 
   <ItemGroup>

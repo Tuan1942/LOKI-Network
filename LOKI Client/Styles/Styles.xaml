@@ -4,6 +4,7 @@
                     xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" 
                     xmlns:i="http://schemas.microsoft.com/xaml/behaviors">
     <vc:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    <vc:FileTypeToVisibilityConverter x:Key="FileTypeToVisibility" />
 
     <Style x:Key="CircularCheckBoxStyle" TargetType="CheckBox">
         <Setter Property="Template">
@@ -82,16 +83,37 @@
         <StackPanel>
             <StackPanel Orientation="Horizontal" Name="Parent" MinHeight="50" Margin="0,0,0,10">
                 <Border VerticalAlignment="Top" Visibility="Visible" CornerRadius="100" Background="Gray">
-                    <Image Margin="5" Width="40" Height=" 40" Source="{Binding ProfilePictureUrl}"/>
+                    <Image Margin="5" Width="40" Height="40" Source="{Binding User.ProfilePictureUrl}" />
                 </Border>
                 <Border CornerRadius="8" Background="AliceBlue" BorderBrush="AliceBlue" BorderThickness="1">
                     <StackPanel MinHeight="30">
-                        <TextBlock Text="Full name"/>
-                        <TextBlock Text="{Binding Content}"/>
+                        <TextBlock Text="{Binding User.FullName}" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
+                        <!-- Display Attachments -->
+                        <ItemsControl ItemsSource="{Binding Attachments}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="4" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="5">
+                                        <Grid>
+                                            <!-- Different visualizations based on FileType -->
+                                            <Image Source="{Binding FileUrl}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Image}" Width="100" Height="100" Stretch="UniformToFill" />
+                                            <MediaElement Source="{Binding FileUrl}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Video}" Width="150" Height="100" LoadedBehavior="Manual" />
+                                            <TextBlock Text="Audio File" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Audio}" />
+                                            <TextBlock Text="{Binding FileName}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Document}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
             </StackPanel>
-            <TextBlock Text="{Binding SentDate}"/>
+            <TextBlock Text="{Binding SentDate, StringFormat='yyyy-MM-dd HH:mm:ss'}" HorizontalAlignment="Right" FontSize="12" />
         </StackPanel>
     </DataTemplate>
 

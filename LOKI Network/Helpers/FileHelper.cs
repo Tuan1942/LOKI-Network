@@ -42,20 +42,5 @@ namespace LOKI_Network.Helpers
             }
             return contentType;
         }
-        private static string GetMimeType(string fileExtension)
-        {
-            return fileExtension.ToLower() switch
-            {
-                ".jpg" or ".jpeg" => "image/jpeg",
-                ".png" => "image/png",
-                ".gif" => "image/gif",
-                ".pdf" => "application/pdf",
-                ".txt" => "text/plain",
-                ".doc" or ".docx" => "application/msword",
-                ".xls" or ".xlsx" => "application/vnd.ms-excel",
-                ".zip" => "application/zip",
-                _ => "application/octet-stream", // Default for unknown types
-            };
-        }
     }
 }

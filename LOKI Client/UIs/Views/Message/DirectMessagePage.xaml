@@ -4,10 +4,15 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:LOKI_Client.UIs.Views.Message"
-      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors" 
+      xmlns:vc="clr-namespace:LOKI_Client.UIs.Converters"
       mc:Ignorable="d" 
       Title="DirectMessagePage">
 
+    <Page.Resources>
+        <vc:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -33,13 +38,28 @@
 
         <!-- Input Section -->
         <StackPanel Grid.Row="1">
-            <ItemsControl ItemsSource="{Binding SelectedFiles}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding FileName}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <Grid>
+                <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                    <ItemsControl HorizontalAlignment="Left" ItemsSource="{Binding SelectedFiles}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Vertical" Margin="5">
+                                    <Image Source="{Binding Preview}" Width="100" Height="Auto" MaxHeight="100" Margin="0"/>
+                                    <TextBlock Width="100" Text="{Binding File.FileName}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="20" Height="20" Margin="5"
+                        Command="{Binding ClearSelectedFilesCommand}" 
+                        Visibility="{Binding IsFilesSelected, Converter={StaticResource BooleanToVisibilityConverter}}">X</Button>
+            </Grid>
             <Grid Height="50" Background="Blue">
                 <Grid.Resources>
                     <Style TargetType="Button">

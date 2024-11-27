@@ -18,11 +18,18 @@ namespace LOKI_Network.Services
             _fileStoragePath = fileStoragePath;
         }
 
-        public async Task <string> UploadFileAsync(IFormFile file, FileType fileType)
+        public async Task<(string FilePath, FileType FileType)> UploadFileAsync(IFormFile file)
         {
-            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var folderPath = Path.Combine(_fileStoragePath, fileName);
-            var filePath = Path.Combine(folderPath, fileName);
+            var fileExtension = Path.GetExtension(file.FileName);
+
+            var fileName = $"{Guid.NewGuid()}{fileExtension}";
+
+            if (!Directory.Exists(_fileStoragePath))
+            {
+                Directory.CreateDirectory(_fileStoragePath);
+            }
+
+            var filePath = Path.Combine(_fileStoragePath, fileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -30,8 +37,9 @@ namespace LOKI_Network.Services
             }
 
             var contentType = FileHelper.GetContentType(filePath);
-            fileType = FileHelper.GetFileType(contentType);
-            return filePath;
+            var fileType = FileHelper.GetFileType(contentType);
+
+            return (filePath, fileType);
         }
 
         public async Task<string> GetFileUrl(Guid attachmentId)

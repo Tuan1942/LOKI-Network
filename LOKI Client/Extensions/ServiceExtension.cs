@@ -29,7 +29,7 @@ namespace LOKI_Client.Extensions
         }
         private static void RegisterServices(IServiceCollection services)
         {
-            var ip = "localhost";
+            var ip = "192.168.1.244";
 
             // Register the TokenProvider
             services.AddSingleton<UserProvider>();

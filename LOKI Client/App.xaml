@@ -1,14 +1,15 @@
 ﻿<Application x:Class="LOKI_Client.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:LOKI_Client"
+             xmlns:local="clr-namespace:LOKI_Client" 
+             xmlns:vc="clr-namespace:LOKI_Client.UIs.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <FontFamily x:Key="Pretendard">pack://application:,,,/Resources/Fonts/#Pretendard Variable</FontFamily>
+            <!--<FontFamily x:Key="Pretendard">pack://application:,,,/Resources/Fonts/#Pretendard Variable</FontFamily>-->
         </ResourceDictionary>
     </Application.Resources>
 </Application>

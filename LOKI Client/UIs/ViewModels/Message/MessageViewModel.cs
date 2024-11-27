@@ -11,6 +11,7 @@ using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 
 namespace LOKI_Client.UIs.ViewModels.Message
 {
@@ -28,11 +29,37 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
         [ObservableProperty]
         private bool isLoadingMessages;
+        public bool IsFilesSelected => SelectedFiles.Any();
+
+        private ObservableCollection<FileMetadata> selectedFiles = new ObservableCollection<FileMetadata>();
+
+        public ObservableCollection<FileMetadata> SelectedFiles
+        {
+            get => selectedFiles;
+            set
+            {
+                if (selectedFiles != null)
+                {
+                    selectedFiles.CollectionChanged -= SelectedFiles_CollectionChanged;
+                }
+
+                SetProperty(ref selectedFiles, value);
+
+                if (selectedFiles != null)
+                {
+                    selectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
+                }
+                OnPropertyChanged(nameof(IsFilesSelected));
+                OnPropertyChanged(nameof(SelectedFiles));
+            }
+        }
+        private void SelectedFiles_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(IsFilesSelected));
+        }
+
         public RelayCommand SelectFilesCommand => new RelayCommand(SelectFiles);
-
-        [ObservableProperty]
-        private List<IFormFile> selectedFiles;
-
+        public RelayCommand ClearSelectedFilesCommand => new RelayCommand(ClearSelectedFiles);
         public RelayCommand SendMessageCommand => new RelayCommand(async () => await SendMessage());
         public RelayCommand<ScrollViewer> LoadNextMessagesCommand => new RelayCommand<ScrollViewer>(async (s) => await CheckForLoadNextMessages(s));
 
@@ -61,6 +88,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
             {
             }
         }
+
         private async Task CheckForLoadNextMessages(ScrollViewer scrollViewer)
         {
             if (scrollViewer == null || IsLoadingMessages) return;
@@ -69,6 +97,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 await GetNextMessages(scrollViewer);
             }
         }
+
         private async Task GetNextMessages(ScrollViewer scrollViewer)
         {
             if (IsLoadingMessages) return; // Avoid concurrent loads
@@ -119,13 +148,14 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 {
                     ConversationId = Conversation.ConversationId,
                     Content = InputContent,
-                    Files = SelectedFiles
+                    Files = SelectedFiles.Select(f => f.File).ToList(),
                 };
                 InputContent = string.Empty;
                 SelectedFiles = null;
                 await _conversationService.SendMessageAsync(Conversation.ConversationId, message);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) 
+            { }
         }
 
         private async Task AddMessage(MessageDTO message)
@@ -135,6 +165,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 Messages.Add(message);
             }
         }
+
         private void SelectFiles()
         {
             var dialog = new OpenFileDialog
@@ -146,21 +177,84 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
             if (dialog.ShowDialog() == true)
             {
-                selectedFiles = dialog.FileNames
-                    .Select(filePath =>
+                SelectedFiles = new ObservableCollection<FileMetadata>(
+                    dialog.FileNames.Select(filePath =>
                     {
-                        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
                         var fileInfo = new FileInfo(filePath);
 
-                        return new FormFile(stream, 0, fileInfo.Length, "file", fileInfo.Name)
+                        return new FileMetadata
                         {
-                            Headers = new HeaderDictionary(), // Optional: Add headers if needed
-                            ContentType = FileHelper.GetMimeType(fileInfo.Extension) // Set the ContentType
+                            File = new FormFile(new FileStream(filePath, FileMode.Open, FileAccess.Read), 0, fileInfo.Length, "file", fileInfo.Name)
+                            {
+                                Headers = new HeaderDictionary(),
+                                ContentType = FileHelper.GetMimeType(fileInfo.Extension)
+                            },
+                            Preview = GenerateFilePreview(filePath) // Generate a preview for each file
                         };
-                    })
-                    .Cast<IFormFile>()
-                    .ToList();
+                    }));
             }
         }
+
+        private void ClearSelectedFiles()
+        {
+            if (SelectedFiles != null) 
+                SelectedFiles.Clear();
+        }
+
+        private BitmapImage GenerateFilePreview(string filePath)
+        {
+            var extension = Path.GetExtension(filePath).ToLower();
+
+            // For image files
+            if (extension is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif" or ".jfif")
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(filePath);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                return bitmap;
+            }
+            // For video files
+            else if (extension is ".mp4" or ".mkv" or ".avi" or ".mov" or ".wmv")
+            {
+                return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/video_icon.png"));
+            }
+            // For audio files
+            else if (extension is ".mp3" or ".wav" or ".ogg" or ".aac" or ".flac")
+            {
+                return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/audio_icon.png"));
+            }
+            // For word files
+            else if (extension is ".doc" or ".docx")
+            {
+                return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/doc_icon.png"));
+            }
+            // For excel files
+            else if (extension is ".xlsx" or ".xls")
+            {
+                return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/xls_icon.png"));
+            }
+            // For power point files
+            else if (extension is ".ppt" or ".pptx")
+            {
+                return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/ppt_icon.png"));
+            }
+            // For pdf files
+            else if (extension is ".pdf")
+            {
+                return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/pdf_icon.png"));
+            }
+            // Default for other file types
+            else
+            {
+                return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/oth_icon.png"));
+            }
+        }
+    }
+    public class FileMetadata
+    {
+        public IFormFile File { get; set; }
+        public BitmapImage Preview { get; set; } // Preview image for display
     }
 }

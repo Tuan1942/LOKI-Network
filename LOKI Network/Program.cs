@@ -3,6 +3,7 @@ using LOKI_Network.Interface;
 using LOKI_Network.Middleware;
 using LOKI_Network.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Net.WebSockets;
@@ -33,6 +34,18 @@ builder.Services.AddDbContext<LokiContext>(options =>
     options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSignalR();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 2147483648;  // 2GB
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 2147483648; // 2GB
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(10); // Increase keep-alive timeout
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(10); // Increase request headers timeout
+});
+
 
 var key = Encoding.ASCII.GetBytes(configuration["Jwt:SecretKey"]);
 builder.Services.AddAuthentication(options =>

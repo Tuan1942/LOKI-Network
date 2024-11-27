@@ -11,6 +11,11 @@ namespace LOKI_Network.Controllers
     public class FileController : ControllerBase
     {
         private readonly IFileService _fileService;
+
+        public FileController(IFileService fileService)
+        {
+            _fileService = fileService;
+        }
         [HttpPost("upload")]
         [Authorize]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file)
@@ -21,8 +26,8 @@ namespace LOKI_Network.Controllers
             }
 
             var fileType = FileHelper.GetFileType(file.ContentType);
-            var result = await _fileService.UploadFileAsync(file, fileType);
-            if (result == null)
+            var result = await _fileService.UploadFileAsync(file);
+            if (result.FilePath == null)
             {
                 return StatusCode(500, "An error occurred while uploading the file.");
             }
@@ -30,10 +35,10 @@ namespace LOKI_Network.Controllers
             return Ok(new { FileUrl = result });
         }
 
-        [HttpGet("{fileId}")]
-        public async Task<IActionResult> GetFile(string fileId)
+        [HttpGet("{fileId:guid}")]
+        public async Task<IActionResult> GetFile(Guid fileId)
         {
-            var filePath = await _fileService.GetFileUrl(Guid.Parse(fileId));
+            var filePath = await _fileService.GetFileUrl(fileId);
 
             if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
             {
