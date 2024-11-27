@@ -22,7 +22,8 @@ public class MessageService : IMessageService
 
     public async Task<MessageDTO> GetMessageAsync(Guid messageId)
     {
-        return new MessageDTO { MessageId = messageId };
+        var message = await _dbContext.FindAsync<MessageDTO>(messageId);
+        return message;
     }
 
     public async Task<Guid> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files)
@@ -60,6 +61,15 @@ public class MessageService : IMessageService
         await _dbContext.SaveChangesAsync();
         return message.MessageId;
     }
+
+    public async Task<bool> UpdateMessageAsync(MessageDTO inputMessage)
+    {
+        var message = await _dbContext.FindAsync<Message>(inputMessage.MessageId);
+        if (message == null) throw new Exception("Message not found.");
+        message.Content = inputMessage.Content;
+        return true;
+    }
+
     public async Task<bool> SendMessageAsync(Guid senderId, Guid messageId, Guid conversationId)
     {
         var message = _dbContext.Messages.Find(messageId);
