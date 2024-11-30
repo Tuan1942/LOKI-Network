@@ -1,6 +1,7 @@
 ﻿using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Client.ApiClients.Services;
 using LOKI_Client.Extensions.Authorize;
+using LOKI_Client.Properties;
 using LOKI_Client.UIs.ViewModels;
 using LOKI_Client.UIs.ViewModels.Account;
 using LOKI_Client.UIs.ViewModels.Conversation;
@@ -40,7 +41,7 @@ namespace LOKI_Client.Extensions
             // Configure HttpClient
             services.AddHttpClient("LokiClient", client =>
             {
-                client.BaseAddress = new Uri($"https://{ip}:3000/");
+                client.BaseAddress = new Uri(BaseClient.ServerAddress);
             }).AddHttpMessageHandler<AuthorizationHandler>();
 
             // Register services using the HttpClient
@@ -62,7 +63,7 @@ namespace LOKI_Client.Extensions
                 var client = httpClientFactory.CreateClient("LokiClient");
                 return new FriendshipService(client);
             });
-            services.AddSingleton(new WebSocketService(new Uri($"wss://{ip}:3000/ws")));
+            services.AddSingleton(new WebSocketService(new Uri(BaseClient.WebSocketAddress)));
         }
     }
 }
