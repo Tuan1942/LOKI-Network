@@ -155,10 +155,12 @@ namespace LOKI_Network.Controllers
         }
 
         [HttpPost("{conversationId:guid}/send")]
-        public async Task<IActionResult> SendMessageAsync(Guid conversationId, [FromForm] MessageDTO message, [FromForm] List<IFormFile> files)
+        public async Task<IActionResult> SendMessageAsync(Guid conversationId, [FromForm] string messageJson, [FromForm] List<IFormFile> files)
         {
             try
             {
+                var message = JsonSerializer.Deserialize<MessageDTO>(messageJson);
+                if (message == null) message = new MessageDTO();
                 if (string.IsNullOrEmpty(message.Content) && files.Count == 0) return BadRequest(new { success = false, message = "Message can not be emty" });
                 var userId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 message.SenderId = userId;

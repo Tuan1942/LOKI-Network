@@ -160,19 +160,12 @@ namespace LOKI_Client.ApiClients.Services
         {
             using var content = new MultipartFormDataContent();
 
-            // Add the JSON content of the message
-            var jsonContent = new StringContent(
-                JsonSerializer.Serialize(new
-                {
-                    message.Content,
-                    message.SenderId,
-                    message.ConversationId
-                }),
-                Encoding.UTF8,
-                "application/json"
-            );
+            // Serialize the message to send as form data
+            var messageJson = JsonSerializer.Serialize(message);
+            var messageContent = new StringContent(messageJson, Encoding.UTF8, "application/json");
 
-            content.Add(jsonContent, "message");
+            // Add the message as part of the form data
+            content.Add(messageContent, "messageJson");
 
             // Add files to the multipart content
             if (message.Files != null && message.Files.Any())
