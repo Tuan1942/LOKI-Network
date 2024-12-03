@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -30,7 +31,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
         [ObservableProperty]
         private bool isLoadingMessages;
-        public bool IsFilesSelected => SelectedFiles.Any();
+        public bool IsFilesSelected => SelectedFiles?.Any() ?? false;
 
         private ObservableCollection<FileMetadata> selectedFiles = new ObservableCollection<FileMetadata>();
 
@@ -153,11 +154,10 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 {
                     ConversationId = Conversation.ConversationId,
                     Content = InputContent,
-                    Files = SelectedFiles.Select(f => f.File).ToList(),
                 };
+                await _conversationService.SendMessageAsync(Conversation.ConversationId, message, SelectedFiles?.Select(f => f.File).ToList());
                 InputContent = string.Empty;
                 SelectedFiles = null;
-                await _conversationService.SendMessageAsync(Conversation.ConversationId, message);
             }
             catch (Exception ex) 
             { }
@@ -165,9 +165,19 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
         private async Task AddMessage(MessageDTO message)
         {
-            if (message.ConversationId == Conversation.ConversationId)
+            try
             {
-                Messages.Add(message);
+                if (message.ConversationId == Conversation.ConversationId)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        Messages.Add(message);
+                    });
+                }
+            }
+            catch (Exception)
+            {
+
             }
         }
 

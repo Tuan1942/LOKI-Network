@@ -165,8 +165,7 @@ namespace LOKI_Network.Controllers
                 var userId = Guid.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 message.SenderId = userId;
                 message.ConversationId = conversationId;
-                if (files.Count > 0) message.Files = files;
-                await _conversationService.SendMessage(message);
+                await _conversationService.SendMessage(message, files);
                 return Ok(new { success = true, message = "Message sent successfully." });
             }
             catch (Exception ex)

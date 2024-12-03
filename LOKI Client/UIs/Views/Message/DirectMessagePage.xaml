@@ -39,7 +39,7 @@
         <!-- Input Section -->
         <StackPanel Grid.Row="1">
             <Grid>
-                <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
                     <ItemsControl HorizontalAlignment="Left" ItemsSource="{Binding SelectedFiles}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>

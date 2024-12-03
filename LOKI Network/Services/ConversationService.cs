@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using LOKI_Network.Helpers;
+using LOKI_Network.Hubs;
 
 namespace LOKI_Network.Services
 {
@@ -16,24 +17,24 @@ namespace LOKI_Network.Services
     {
         private readonly LokiContext _dbContext;
         private readonly IFileService _fileService;
-        private readonly IWebSocketService _webSocketService;
         private readonly IUserService _userService;
         private readonly IMessageService _messageService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ChatHub _chatHub;
         public ConversationService(
             LokiContext lokiContext, 
-            IWebSocketService webSocketService,
             IUserService userService,
             IMessageService messageService,
             IFileService fileService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            ChatHub chatHub)
         {
             _dbContext = lokiContext;
-            _webSocketService = webSocketService;
             _userService = userService;
             _messageService = messageService;
             _fileService = fileService;
             _serviceProvider = serviceProvider;
+            _chatHub = chatHub;
         }
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
         {
@@ -242,7 +243,7 @@ namespace LOKI_Network.Services
                 }).ToList()
             }).OrderBy(m => m.SentDate).ToList();
         }
-        public async Task SendMessage(MessageDTO inputMessage)
+        public async Task SendMessage(MessageDTO inputMessage, List<IFormFile> files)
         {
             var message = new Message
             {
@@ -256,10 +257,10 @@ namespace LOKI_Network.Services
             _dbContext.Messages.Add(message);
             await _dbContext.SaveChangesAsync();
 
-            if (inputMessage.Files != null)
+            if (files != null)
             {
                 // Handle each file in the list
-                foreach (var file in inputMessage.Files)
+                foreach (var file in files)
                 {
                     var fileResult = await _fileService.UploadFileAsync(file);
 
@@ -286,7 +287,7 @@ namespace LOKI_Network.Services
                 .ToList();
 
             var messageDTO = await _messageService.GetMessageAsync(message.MessageId);
-            await _webSocketService.BroadcastMessageAsync(messageDTO, participantList);
+            await _chatHub.BroadcastMessage(messageDTO, participantList);
 
         }
         public async Task<List<MessageDTO>> GetNextMessagesAsync(Guid conversationId, Guid lastMessageId, int pageSize = 10)
