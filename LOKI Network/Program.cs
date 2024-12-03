@@ -1,4 +1,5 @@
 using LOKI_Network.DbContexts;
+using LOKI_Network.Helpers;
 using LOKI_Network.Interface;
 using LOKI_Network.Middleware;
 using LOKI_Network.Services;
@@ -25,6 +26,8 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFileService, FileService>(provider =>
     new FileService(provider.GetRequiredService<LokiContext>(), configuration["FileStoragePath"]));
+
+builder.Services.AddTransient<UrlHelper>();
 
 builder.Services.AddControllers(
     options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);

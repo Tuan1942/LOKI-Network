@@ -4,7 +4,11 @@ using LOKI_Network.DbContexts;
 using LOKI_Network.Interface;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using System.Net.Sockets;
+using System.Net;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using LOKI_Network.Helpers;
 
 namespace LOKI_Network.Services
 {
@@ -15,18 +19,21 @@ namespace LOKI_Network.Services
         private readonly IWebSocketService _webSocketService;
         private readonly IUserService _userService;
         private readonly IMessageService _messageService;
+        private readonly IServiceProvider _serviceProvider;
         public ConversationService(
             LokiContext lokiContext, 
             IWebSocketService webSocketService,
             IUserService userService,
             IMessageService messageService,
-            IFileService fileService)
+            IFileService fileService,
+            IServiceProvider serviceProvider)
         {
             _dbContext = lokiContext;
             _webSocketService = webSocketService;
             _userService = userService;
             _messageService = messageService;
             _fileService = fileService;
+            _serviceProvider = serviceProvider;
         }
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
         {
@@ -189,7 +196,7 @@ namespace LOKI_Network.Services
                     CreatedDate = a.CreatedDate,
                     FileName = a.FileName,
                     FileType = a.FileType,
-                    FileUrl = a.FileUrl
+                    FileUrl = GetServerUrl(a.AttachmentId),
                 })
                 .ToListAsync();
 
@@ -231,7 +238,7 @@ namespace LOKI_Network.Services
                     CreatedDate = a.CreatedDate,
                     FileName = a.FileName,
                     FileType = a.FileType,
-                    FileUrl = a.FileUrl
+                    FileUrl = GetServerUrl(a.AttachmentId),
                 }).ToList()
             }).OrderBy(m => m.SentDate).ToList();
         }
@@ -329,9 +336,14 @@ namespace LOKI_Network.Services
                     CreatedDate = a.CreatedDate,
                     FileName = a.FileName,
                     FileType = a.FileType,
-                    FileUrl = a.FileUrl
+                    FileUrl = GetServerUrl(a.AttachmentId),
                 }).ToList().ToList()
             }).ToList();
+        }
+        private string GetServerUrl(Guid attachmentId)
+        {
+            var urlHelper = _serviceProvider.GetService<UrlHelper>();
+            return urlHelper?.GetServerUrl() + "file/" + attachmentId ?? "";
         }
     }
 }

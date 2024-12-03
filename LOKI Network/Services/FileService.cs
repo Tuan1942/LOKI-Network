@@ -42,7 +42,7 @@ namespace LOKI_Network.Services
             return (filePath, fileType);
         }
 
-        public async Task<string> GetFileUrl(Guid attachmentId)
+        public async Task<(string FileUrl, FileType FileType)> GetFileUrl(Guid attachmentId)
         {
             var attachment = await _dbContext.Attachments
                 .FirstOrDefaultAsync(a => a.AttachmentId == attachmentId);
@@ -52,7 +52,7 @@ namespace LOKI_Network.Services
                 throw new FileNotFoundException("Attachment not found.");
             }
 
-            return attachment.FileUrl;
+            return (attachment.FileUrl, attachment.FileType);
         }
 
         public bool DeleteFile(string filePath)

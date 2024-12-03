@@ -5,6 +5,7 @@
                     xmlns:i="http://schemas.microsoft.com/xaml/behaviors">
     <vc:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <vc:FileTypeToVisibilityConverter x:Key="FileTypeToVisibility" />
+    <vc:ObjectToVisibilityConverter x:Key="ObjectToVisibility" />
 
     <Style x:Key="CircularCheckBoxStyle" TargetType="CheckBox">
         <Setter Property="Template">
@@ -101,10 +102,14 @@
                                     <Border Margin="5">
                                         <Grid>
                                             <!-- Different visualizations based on FileType -->
-                                            <Image Source="{Binding FileUrl}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Image}" Width="100" Height="100" Stretch="UniformToFill" />
-                                            <MediaElement Source="{Binding FileUrl}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Video}" Width="150" Height="100" LoadedBehavior="Manual" />
+                                            <Image Source="{Binding FileUrl}" 
+                                                   Visibility="{Binding FileUrl, Converter={StaticResource ObjectToVisibility}}" 
+                                                   Width="100" 
+                                                   Height="100" 
+                                                   Stretch="UniformToFill" />
+                                            <!--<MediaElement Source="{Binding FileUrl}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Video}" Width="150" Height="100" LoadedBehavior="Manual" />
                                             <TextBlock Text="Audio File" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Audio}" />
-                                            <TextBlock Text="{Binding FileName}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Document}" />
+                                            <TextBlock Text="{Binding FileName}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Document}" />-->
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

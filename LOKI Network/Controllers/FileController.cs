@@ -1,4 +1,5 @@
-﻿using LOKI_Network.Helpers;
+﻿using LOKI_Model.Enums;
+using LOKI_Network.Helpers;
 using LOKI_Network.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -35,10 +36,11 @@ namespace LOKI_Network.Controllers
             return Ok(new { FileUrl = result });
         }
 
-        [HttpGet("{fileId:guid}")]
+        [HttpGet("{fileId:guid}/download")]
         public async Task<IActionResult> GetFile(Guid fileId)
         {
-            var filePath = await _fileService.GetFileUrl(fileId);
+            var file = await _fileService.GetFileUrl(fileId);
+            var filePath = file.FileUrl;
 
             if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
             {
@@ -51,6 +53,49 @@ namespace LOKI_Network.Controllers
             return File(fileBytes, contentType);
         }
 
+        [HttpGet("{fileId:guid}")]
+        public async Task<IActionResult> GetFile(Guid fileId, int quality = 20)
+        {
+            quality = Math.Max(0, Math.Min(100, quality));
+            var file = await _fileService.GetFileUrl(fileId);
+            var filePath = file.FileUrl;
+            var fileType = file.FileType;
+            if (fileType == FileType.Image)
+            {
+                if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+                {
+                    return NotFound("File not found.");
+                }
+
+                using var originalImage = System.Drawing.Image.FromFile(filePath);
+                using var stream = new MemoryStream();
+
+                // Reduce the quality of the image
+                var encoderParameters = new System.Drawing.Imaging.EncoderParameters(1);
+                var qualityParameter = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality); // 50% quality
+                encoderParameters.Param[0] = qualityParameter;
+
+                // Get the image codec for JPEG
+                var codec = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders()
+                                .FirstOrDefault(c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
+
+                // Save the reduced-quality image to the stream
+                originalImage.Save(stream, codec, encoderParameters);
+
+                // Reset the stream position for the response
+                stream.Position = 0;
+
+                return File(stream.ToArray(), "image/jpeg");
+            }
+            else
+            {
+                var previewPath = FilePreview(filePath);
+                var fileBytes = System.IO.File.ReadAllBytes(previewPath);
+                var contentType = FileHelper.GetContentType(previewPath);
+
+                return File(fileBytes, contentType);
+            }
+        }
         //[HttpDelete("{fileId}")]
         //public async Task<IActionResult> DeleteFile(string fileId)
         //{
@@ -63,5 +108,50 @@ namespace LOKI_Network.Controllers
 
         //    return Ok("File deleted successfully.");
         //}
+        private string FilePreview(string filePath)
+        {
+            var extension = Path.GetExtension(filePath).ToLower();
+
+            // For image files
+            if (extension is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".gif" or ".jfif")
+            {
+                return "";
+            }
+            // For video files
+            else if (extension is ".mp4" or ".mkv" or ".avi" or ".mov" or ".wmv")
+            {
+                return "Resources/FileIcons/video_icon.png";
+            }
+            // For audio files
+            else if (extension is ".mp3" or ".wav" or ".ogg" or ".aac" or ".flac")
+            {
+                return "Resources/FileIcons/audio_icon.png";
+            }
+            // For word files
+            else if (extension is ".doc" or ".docx")
+            {
+                return "Resources/FileIcons/doc_icon.png";
+            }
+            // For excel files
+            else if (extension is ".xlsx" or ".xls")
+            {
+                return "Resources/FileIcons/xls_icon.png";
+            }
+            // For power point files
+            else if (extension is ".ppt" or ".pptx")
+            {
+                return "Resources/FileIcons/ppt_icon.png";
+            }
+            // For pdf files
+            else if (extension is ".pdf")
+            {
+                return "Resources/FileIcons/pdf_icon.png";
+            }
+            // Default for other file types
+            else
+            {
+                return "Resources/FileIcons/oth_icon.png";
+            }
+        }
     }
 }

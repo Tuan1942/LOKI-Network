@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace LOKI_Client.UIs.ViewModels.Message
 {
@@ -81,7 +82,11 @@ namespace LOKI_Client.UIs.ViewModels.Message
             {
                 Conversation = conversation;
                 var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1);
-                Messages = new ObservableCollection<MessageDTO>(messageList);
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    Messages = new ObservableCollection<MessageDTO>(messageList);
+                });
+
                 WeakReferenceMessenger.Default.Send(new ScrollToBottomRequest());
             }
             catch (Exception ex)
