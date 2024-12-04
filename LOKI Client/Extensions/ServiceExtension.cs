@@ -6,6 +6,7 @@ using LOKI_Client.UIs.ViewModels;
 using LOKI_Client.UIs.ViewModels.Account;
 using LOKI_Client.UIs.ViewModels.Conversation;
 using LOKI_Client.UIs.ViewModels.Message;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net.Http;
@@ -30,8 +31,6 @@ namespace LOKI_Client.Extensions
         }
         private static void RegisterServices(IServiceCollection services)
         {
-            var ip = "192.168.1.244";
-
             // Register the TokenProvider
             services.AddSingleton<UserProvider>();
 
@@ -63,6 +62,23 @@ namespace LOKI_Client.Extensions
                 var client = httpClientFactory.CreateClient("LokiClient");
                 return new FriendshipService(client);
             });
+
+            // Register SignalR HubConnection
+            services.AddSingleton(provider =>
+            {
+                var userProvider = provider.GetRequiredService<UserProvider>();
+                return new HubConnectionBuilder()
+                    .WithUrl(BaseClient.ChatHubAddress, options =>
+                    {
+                        options.AccessTokenProvider = () => Task.FromResult(userProvider.GetToken());
+                    })
+                    .WithAutomaticReconnect()
+                    .Build();
+            });
+
+            // Register SignalRService
+            services.AddSingleton<SignalRService>();
+
             services.AddSingleton(new WebSocketService(new Uri(BaseClient.WebSocketAddress)));
         }
     }

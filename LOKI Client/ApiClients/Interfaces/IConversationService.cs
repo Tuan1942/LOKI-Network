@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Linq;
 using LOKI_Model.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace LOKI_Client.ApiClients.Interfaces
 {
@@ -17,7 +18,7 @@ namespace LOKI_Client.ApiClients.Interfaces
         Task<List<MessageDTO>> GetMessagesByConversationAsync(Guid conversationId, int page);
         Task CreateConversationAsync(List<Guid> users, string conversationName);
         Task LeaveConversationAsync(Guid conversationId);
-        Task SendMessageAsync(Guid conversationId, MessageDTO message);
+        Task SendMessageAsync(Guid conversationId, MessageDTO message, List<IFormFile> files);
         Task<List<MessageDTO>> GetNextMessagesAsync(Guid conversationId, Guid messageId);
     }
 }

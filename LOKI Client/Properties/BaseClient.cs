@@ -14,5 +14,6 @@ namespace LOKI_Client.Properties
         static string Port = "3000";
         public static readonly string ServerAddress = $"https://{Ip}:{Port}/";
         public static readonly string WebSocketAddress = $"wss://{Ip}:{Port}/ws";
+        public static readonly string ChatHubAddress = $"https://{Ip}:{Port}/chatHub";
     }
 }

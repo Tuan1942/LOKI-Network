@@ -31,6 +31,7 @@ namespace LOKI_Client.UIs.ViewModels.Conversation
         private void RegisterService()
         {
             WeakReferenceMessenger.Default.Register<RefreshConversationListRequest>(this, async (r, action) => { await RefreshConversationListAsync(action.Token); });
+            WeakReferenceMessenger.Default.Register<AddMessageRequest>(this, (r, action) => NotifyConversation(action.Message));
         }
         private async Task RefreshConversationListAsync(string token)
         {
@@ -48,6 +49,21 @@ namespace LOKI_Client.UIs.ViewModels.Conversation
         private void OpenConversation(ConversationDTO conversation)
         {
             WeakReferenceMessenger.Default.Send(new RefreshConversationMessages(conversation));
+        }
+        private void NotifyConversation(MessageDTO message)
+        {
+            var conversation = Conversations.FirstOrDefault(c => c.ConversationId == message.ConversationId);
+            if (conversation == null) return;
+
+            // Check if already at the top
+            if (Conversations.IndexOf(conversation) == 0) return;
+
+            // Reorder
+            App.Current.Dispatcher.BeginInvoke(() =>
+            {
+                Conversations.Remove(conversation);
+                Conversations.Insert(0, conversation);
+            });
         }
     }
 }

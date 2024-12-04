@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using LOKI_Network.Helpers;
+using LOKI_Network.Hubs;
 
 namespace LOKI_Network.Services
 {
@@ -16,30 +17,31 @@ namespace LOKI_Network.Services
     {
         private readonly LokiContext _dbContext;
         private readonly IFileService _fileService;
-        private readonly IWebSocketService _webSocketService;
         private readonly IUserService _userService;
         private readonly IMessageService _messageService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ChatHub _chatHub;
         public ConversationService(
             LokiContext lokiContext, 
-            IWebSocketService webSocketService,
             IUserService userService,
             IMessageService messageService,
             IFileService fileService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            ChatHub chatHub)
         {
             _dbContext = lokiContext;
-            _webSocketService = webSocketService;
             _userService = userService;
             _messageService = messageService;
             _fileService = fileService;
             _serviceProvider = serviceProvider;
+            _chatHub = chatHub;
         }
         public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
         {
             var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants
                 .Any(cp => cp.UserId == userId))
+                .OrderByDescending(c => c.LatestMessageDate)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
                 .Select(c => new ConversationDTO
@@ -66,6 +68,7 @@ namespace LOKI_Network.Services
         {
             var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == false)
+                .OrderByDescending(c => c.LatestMessageDate)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
                 .Select(c => new ConversationDTO
@@ -92,6 +95,7 @@ namespace LOKI_Network.Services
         {
             var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == true)
+                .OrderByDescending(c => c.LatestMessageDate)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
                 .Select(c => new ConversationDTO
@@ -143,6 +147,7 @@ namespace LOKI_Network.Services
                 ConversationName = string.IsNullOrWhiteSpace(conversationName) ? "Unnamed Conversation" : conversationName,
                 IsGroup = users.Count > 2,
                 CreatedDate = DateTime.UtcNow,
+                LatestMessageDate = DateTime.UtcNow,
                 ConversationParticipants = users.Select((u, index) => new ConversationParticipant
                 {
                     ConversationParticipantId = Guid.NewGuid(),
@@ -242,7 +247,7 @@ namespace LOKI_Network.Services
                 }).ToList()
             }).OrderBy(m => m.SentDate).ToList();
         }
-        public async Task SendMessage(MessageDTO inputMessage)
+        public async Task SendMessage(MessageDTO inputMessage, List<IFormFile> files)
         {
             var message = new Message
             {
@@ -256,27 +261,21 @@ namespace LOKI_Network.Services
             _dbContext.Messages.Add(message);
             await _dbContext.SaveChangesAsync();
 
-            if (inputMessage.Files != null)
+            // Update latest message time
+            var conversation = await _dbContext.Conversations.FindAsync(message.ConversationId);
+            if (conversation != null)
+            {
+                conversation.LatestMessageDate = message.SentDate;
+                await _dbContext.SaveChangesAsync();
+            }
+
+            if (files != null)
             {
                 // Handle each file in the list
-                foreach (var file in inputMessage.Files)
+                foreach (var file in files)
                 {
-                    var fileResult = await _fileService.UploadFileAsync(file);
-
-                    var attachment = new Attachment
-                    {
-                        AttachmentId = Guid.NewGuid(),
-                        MessageId = message.MessageId,
-                        FileUrl = fileResult.FilePath,
-                        FileName = file.FileName,
-                        FileType = fileResult.FileType,
-                        CreatedDate = DateTime.UtcNow
-                    };
-
-                    _dbContext.Attachments.Add(attachment);
+                    await _fileService.UploadFileAsync(message.MessageId, file);
                 }
-
-                await _dbContext.SaveChangesAsync();
             }
 
             var participantList = 
@@ -286,7 +285,7 @@ namespace LOKI_Network.Services
                 .ToList();
 
             var messageDTO = await _messageService.GetMessageAsync(message.MessageId);
-            await _webSocketService.BroadcastMessageAsync(messageDTO, participantList);
+            await _chatHub.BroadcastMessage(messageDTO, participantList);
 
         }
         public async Task<List<MessageDTO>> GetNextMessagesAsync(Guid conversationId, Guid lastMessageId, int pageSize = 10)

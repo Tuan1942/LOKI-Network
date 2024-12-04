@@ -26,8 +26,7 @@ namespace LOKI_Network.Controllers
             var senderId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var message = await _messageService.CreateMessageAsync(
                 senderId,
-                messageDto.Content,
-                messageDto.Files
+                messageDto.Content
             );
 
             return Ok(message);
@@ -42,8 +41,7 @@ namespace LOKI_Network.Controllers
 
             var messageId = await _messageService.CreateMessageAsync(
                 senderId,
-                sendMessageDto.Content,
-                sendMessageDto.Files
+                sendMessageDto.Content
             );
 
 

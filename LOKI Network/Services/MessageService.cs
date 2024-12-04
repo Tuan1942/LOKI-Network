@@ -11,13 +11,11 @@ public class MessageService : IMessageService
 {
     private readonly LokiContext _dbContext;
     private readonly IFileService _fileService;
-    private readonly IWebSocketService _webSocketService;
 
-    public MessageService(LokiContext lokiContext, IFileService fileService, IWebSocketService webSocketService)
+    public MessageService(LokiContext lokiContext, IFileService fileService)
     {
         _dbContext = lokiContext;
         _fileService = fileService;
-        _webSocketService = webSocketService;
     }
 
     public async Task<MessageDTO> GetMessageAsync(Guid messageId)
@@ -50,7 +48,7 @@ public class MessageService : IMessageService
             };
     }
 
-    public async Task<Guid> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files)
+    public async Task<Guid> CreateMessageAsync(Guid senderId, string content, List<IFormFile> files = null)
     {
         var message = new Message
         {

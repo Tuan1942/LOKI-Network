@@ -3,6 +3,7 @@ using LOKI_Model.Models;
 using LOKI_Network.DbContexts;
 using LOKI_Network.Helpers;
 using LOKI_Network.Interface;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LOKI_Network.Services
@@ -40,6 +41,39 @@ namespace LOKI_Network.Services
             var fileType = FileHelper.GetFileType(contentType);
 
             return (filePath, fileType);
+        }
+        public async Task UploadFileAsync(Guid messageId, IFormFile file)
+        {
+            var fileExtension = Path.GetExtension(file.FileName);
+
+            var fileName = $"{Guid.NewGuid()}{fileExtension}";
+
+            if (!Directory.Exists(_fileStoragePath))
+            {
+                Directory.CreateDirectory(_fileStoragePath);
+            }
+
+            var filePath = Path.Combine(_fileStoragePath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var contentType = FileHelper.GetContentType(filePath);
+            var fileType = FileHelper.GetFileType(contentType);
+            var attachment = new Attachment
+            {
+                AttachmentId = Guid.NewGuid(),
+                MessageId = messageId,
+                FileUrl = filePath,
+                FileName = file.FileName,
+                FileType = fileType,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _dbContext.Attachments.Add(attachment);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<(string FileUrl, FileType FileType)> GetFileUrl(Guid attachmentId)

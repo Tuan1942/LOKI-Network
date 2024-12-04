@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Middleware\**" />
+    <Content Remove="Middleware\**" />
+    <EmbeddedResource Remove="Middleware\**" />
+    <None Remove="Middleware\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Resources\FileIcons\audio_icon.png" />
     <None Remove="Resources\FileIcons\doc_icon.png" />
     <None Remove="Resources\FileIcons\oth_icon.png" />

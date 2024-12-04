@@ -94,31 +94,32 @@
                         <ItemsControl ItemsSource="{Binding Attachments}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Columns="4" />
+                                    <UniformGrid Columns="3" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Margin="5">
-                                        <Grid>
+                                        <StackPanel>
                                             <!-- Different visualizations based on FileType -->
                                             <Image Source="{Binding FileUrl}" 
                                                    Visibility="{Binding FileUrl, Converter={StaticResource ObjectToVisibility}}" 
-                                                   Width="100" 
+                                                   Width="Auto" MaxWidth="200"
                                                    Height="100" 
-                                                   Stretch="UniformToFill" />
+                                                   Stretch="Uniform" />
+                                            <TextBlock HorizontalAlignment="Center" Text="{Binding FileName}" MaxWidth="200" TextWrapping="Wrap" MaxHeight="50"/>
                                             <!--<MediaElement Source="{Binding FileUrl}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Video}" Width="150" Height="100" LoadedBehavior="Manual" />
                                             <TextBlock Text="Audio File" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Audio}" />
                                             <TextBlock Text="{Binding FileName}" Visibility="{Binding FileType, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=Document}" />-->
-                                        </Grid>
+                                        </StackPanel>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <TextBlock Text="{Binding SentDate, StringFormat='yyyy-MM-dd HH:mm:ss'}" HorizontalAlignment="Right" FontSize="12" />
                     </StackPanel>
                 </Border>
             </StackPanel>
-            <TextBlock Text="{Binding SentDate, StringFormat='yyyy-MM-dd HH:mm:ss'}" HorizontalAlignment="Right" FontSize="12" />
         </StackPanel>
     </DataTemplate>
 

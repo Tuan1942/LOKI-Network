@@ -1,7 +1,7 @@
 using LOKI_Network.DbContexts;
 using LOKI_Network.Helpers;
+using LOKI_Network.Hubs;
 using LOKI_Network.Interface;
-using LOKI_Network.Middleware;
 using LOKI_Network.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -19,7 +19,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
 // Register services
-builder.Services.AddSingleton<IWebSocketService, WebSocketService>();
+builder.Services.AddSingleton<ChatHub>();
 builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
@@ -81,27 +81,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Websocket
-app.UseWebSockets();
-app.UseMiddleware<WebSocketMiddleware>();
-//app.Use(async (context, next) =>
-//{
-//    // Handle WebSocket connections
-//    if (context.WebSockets.IsWebSocketRequest)
-//    {
-//        var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-//        // Handle the WebSocket connection
-//        await HandleWebSocketConnection(webSocket);
-//    }
-//    else
-//    {
-//        // Handle non-WebSocket requests
-//        await next();
-//    }
-//});
-
-
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -113,5 +92,6 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();

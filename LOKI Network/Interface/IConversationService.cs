@@ -17,7 +17,7 @@ namespace LOKI_Network.Services
         Task<List<AttachmentDTO>> GetAttachmentsByConversationAsync(Guid conversationId);
         Task<List<MessageDTO>> GetMessagesByConversationAsync(Guid conversationId, int pageNumber = 1, int pageSize = 10);
         Task<List<MessageDTO>> GetNextMessagesAsync(Guid conversationId, Guid lastMessageId, int pageSize = 10);
-        Task SendMessage(MessageDTO inputMessage);
+        Task SendMessage(MessageDTO inputMessage, List<IFormFile> files);
 
     }
 }

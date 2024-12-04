@@ -25,6 +25,7 @@ namespace LOKI_Client.UIs.ViewModels
         #region Properties
 
         private readonly WebSocketService _webSocketService;
+        public readonly SignalRService _signalRService;
 
         [ObservableProperty]
         private bool loggedIn = true;
@@ -36,10 +37,11 @@ namespace LOKI_Client.UIs.ViewModels
 
         #endregion
 
-        public HomeViewModel(WebSocketService webSocketService)
+        public HomeViewModel(WebSocketService webSocketService, SignalRService signalRService)
         {
             _webSocketService = webSocketService;
-            WeakReferenceMessenger.Default.Register<ConnectWebSocketRequest>(this, async (r, action) => { await ConnectWebSocket(action.Token); });
+            _signalRService = signalRService;
+            WeakReferenceMessenger.Default.Register<ConnectWebSocketRequest>(this, async (r, action) => { await ConnectSignalRAsync(action.Token); });
             RefreshConnection();
             Application.Current.Exit += async (sender, args) =>
             {
@@ -59,7 +61,7 @@ namespace LOKI_Client.UIs.ViewModels
             try
             {
                 var userProvider = App.Current.Services.GetRequiredService<UserProvider>();
-                await ConnectWebSocket(userProvider.User?.Token);
+                await ConnectSignalRAsync(userProvider.User?.Token);
             }
             catch (Exception ex)
             {
@@ -70,27 +72,51 @@ namespace LOKI_Client.UIs.ViewModels
 
         private async Task SendMessageAsync(string message)
         {
-            await _webSocketService.SendMessageAsync(message);
+            await _signalRService.SendAsync("SendMessage", new { Content = message });
         }
 
-        private async Task ConnectWebSocket(string token)
+        private async Task ConnectSignalRAsync(string token)
         {
             try
             {
-                LoggedIn = await _webSocketService.ConnectAsync(token);
+                await _signalRService.StartAsync();
+
+                // Handle incoming messages
+                _signalRService.On<MessageDTO>("ReceiveMessage", message =>
+                {
+                    WeakReferenceMessenger.Default.Send(new AddMessageRequest(message));
+                });
+
+                LoggedIn = true;
                 WeakReferenceMessenger.Default.Send(new RefreshConversationListRequest(token));
-                await _webSocketService.ReceiveMessagesAsync();
             }
-            catch (Exception) { LoggedIn = false; }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error connecting to SignalR: {ex.Message}");
+                LoggedIn = false;
+            }
+        }
+
+        private async Task DisconnectSignalRAsync()
+        {
+            try
+            {
+                await _signalRService.StopAsync();
+                LoggedIn = false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error disconnecting SignalR: {ex.Message}");
+            }
+        }
+
+        private async Task LogoutAsync()
+        {
+            await DisconnectSignalRAsync();
         }
 
         #endregion
 
-        private async Task LogoutAsync()
-        {
-            await _webSocketService.CloseAsync();
-            LoggedIn = false;
-        }
     }
 
 }

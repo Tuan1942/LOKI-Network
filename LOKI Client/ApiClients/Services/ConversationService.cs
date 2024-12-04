@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Model.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace LOKI_Client.ApiClients.Services
 {
@@ -156,28 +157,19 @@ namespace LOKI_Client.ApiClients.Services
         /// <summary>
         /// Send a message to a specific conversation.
         /// </summary>
-        public async Task SendMessageAsync(Guid conversationId, MessageDTO message)
+        public async Task SendMessageAsync(Guid conversationId, MessageDTO message, List<IFormFile> files)
         {
             using var content = new MultipartFormDataContent();
-
-            // Add the JSON content of the message
-            var jsonContent = new StringContent(
-                JsonSerializer.Serialize(new
-                {
-                    message.Content,
-                    message.SenderId,
-                    message.ConversationId
-                }),
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            content.Add(jsonContent, "message");
+            // Serialize the message to send as form data
+            var messageJson = JsonSerializer.Serialize(message);
+            var messageContent = new StringContent(messageJson, Encoding.UTF8, "application/json");
+            // Add the message as part of the form data
+            content.Add(messageContent, "messageJson");
 
             // Add files to the multipart content
-            if (message.Files != null && message.Files.Any())
+            if (files != null && files.Any())
             {
-                foreach (var file in message.Files)
+                foreach (var file in files)
                 {
                     var fileContent = new StreamContent(file.OpenReadStream());
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);

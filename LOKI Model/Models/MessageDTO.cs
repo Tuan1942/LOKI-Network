@@ -20,7 +20,6 @@ namespace LOKI_Model.Models
         public bool IsRead { get; set; }
 
         public UserDTO User { get; set; }
-        public List<IFormFile> Files { get; set; }
         public List<AttachmentDTO> Attachments { get; set; }
     }
 }
