@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Client.Models;
 using LOKI_Client.Models.Helper;
+using LOKI_Client.Models.Objects;
 using LOKI_Model.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
@@ -21,7 +22,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
     {
         private readonly IConversationService _conversationService;
         [ObservableProperty]
-        ObservableCollection<MessageDTO> messages;
+        ObservableCollection<MessageObject> messages;
 
         [ObservableProperty]
         private ConversationDTO conversation;
@@ -82,29 +83,43 @@ namespace LOKI_Client.UIs.ViewModels.Message
             try
             {
                 Conversation = conversation;
-                var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1);
+                Messages = new ObservableCollection<MessageObject>();
+                var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1); // list MessageDTO
                 if (messageList.Any())
                 {
                     App.Current.Dispatcher.Invoke(() =>
                     {
-                        if (Messages == null)
+                        if (Messages != null)
+                        foreach (var message in messageList)
                         {
-                            Messages = new ObservableCollection<MessageDTO>(messageList);
-                        }
-                        else
-                        {
-                            foreach (var message in messageList)
-                            {
-                                Messages.Add(message);
-                            }
+                            var messageObject = new MessageObject(message);
+                            Messages.Add(messageObject);
                         }
                     });
                 }
-
+                await LoadAttachmentsAsync(Messages);
                 WeakReferenceMessenger.Default.Send(new ScrollToBottomRequest());
             }
             catch (Exception ex)
             {
+            }
+        }
+        private async Task LoadAttachmentsAsync(IEnumerable<MessageObject> messages)
+        {
+            foreach (var message in messages.OrderByDescending(m => m.SentDate))
+            {
+                foreach (var attachment in message.Attachments)
+                {
+                    App.Current.Dispatcher.Invoke(async () =>
+                    {
+                        if (!attachment.IsLoaded)
+                        {
+                            attachment.FileImage = new BitmapImage(new Uri(attachment.FileUrl));
+                            attachment.IsLoaded = true;
+                            await Task.Delay(100);
+                        }
+                    });
+                }
             }
         }
 
@@ -137,7 +152,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
                 foreach (var message in messageList)
                 {
-                    Messages.Insert(0, message);
+                    Messages.Insert(0, new MessageObject(message));
                 }
 
                 await Task.Delay(1);
@@ -184,7 +199,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        Messages.Add(message);
+                        Messages.Add(new MessageObject(message));
                     });
                 }
             }

@@ -102,8 +102,8 @@
                                     <Border Margin="5">
                                         <StackPanel>
                                             <!-- Different visualizations based on FileType -->
-                                            <Image Source="{Binding FileUrl}" 
-                                                   Visibility="{Binding FileUrl, Converter={StaticResource ObjectToVisibility}}" 
+                                            <Image Source="{Binding FileImage}" 
+                                                   Visibility="{Binding IsLoaded, Converter={StaticResource BooleanToVisibilityConverter}}" 
                                                    Width="Auto" MaxWidth="200"
                                                    Height="100" 
                                                    Stretch="Uniform" />

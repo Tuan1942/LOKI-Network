@@ -5,7 +5,9 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:LOKI_Client.UIs.Views.Message"
       xmlns:i="http://schemas.microsoft.com/xaml/behaviors" 
-      xmlns:vc="clr-namespace:LOKI_Client.UIs.Converters"
+      xmlns:vc="clr-namespace:LOKI_Client.UIs.Converters" 
+      xmlns:message="clr-namespace:LOKI_Client.UIs.ViewModels.Message" 
+      d:DataContext="{d:DesignInstance Type=message:MessageViewModel}"
       mc:Ignorable="d" 
       Title="DirectMessagePage">
 
