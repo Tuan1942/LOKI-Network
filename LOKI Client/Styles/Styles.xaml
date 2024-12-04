@@ -100,10 +100,9 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Margin="5">
-                                        <StackPanel>
+                                        <StackPanel >
                                             <!-- Different visualizations based on FileType -->
                                             <Image Source="{Binding FileImage}" 
-                                                   Visibility="{Binding IsLoaded, Converter={StaticResource BooleanToVisibilityConverter}}" 
                                                    Width="Auto" MaxWidth="200"
                                                    Height="100" 
                                                    Stretch="Uniform" />

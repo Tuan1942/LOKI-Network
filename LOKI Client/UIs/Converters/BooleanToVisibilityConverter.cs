@@ -13,6 +13,7 @@ namespace LOKI_Client.UIs.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value == null) return Visibility.Collapsed;
             return (bool)value ? Visibility.Visible : Visibility.Collapsed;
         }
 

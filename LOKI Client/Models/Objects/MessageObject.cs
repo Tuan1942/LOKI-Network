@@ -19,8 +19,8 @@ namespace LOKI_Client.Models.Objects
             SentDate = dto.SentDate;
             IsRead = dto.IsRead;
             User = dto.User;
-            Attachments = dto.Attachments.Select(a => new AttachmentObject(a)).ToList();
+            Attachments = new ObservableCollection<AttachmentObject>(dto.Attachments.Select(a => new AttachmentObject(a)));
         }
-        public new List<AttachmentObject> Attachments { get; set; }
+        public new ObservableCollection<AttachmentObject> Attachments { get; set; }
     }
 }

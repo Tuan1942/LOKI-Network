@@ -21,6 +21,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
     public partial class MessageViewModel : ObservableObject
     {
         private readonly IConversationService _conversationService;
+        private int maxInputFiles = 20;
         [ObservableProperty]
         ObservableCollection<MessageObject> messages;
 
@@ -83,42 +84,65 @@ namespace LOKI_Client.UIs.ViewModels.Message
             try
             {
                 Conversation = conversation;
-                Messages = new ObservableCollection<MessageObject>();
-                var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1); // list MessageDTO
-                if (messageList.Any())
-                {
-                    App.Current.Dispatcher.Invoke(() =>
-                    {
-                        if (Messages != null)
-                        foreach (var message in messageList)
-                        {
-                            var messageObject = new MessageObject(message);
-                            Messages.Add(messageObject);
-                        }
-                    });
-                }
-                await LoadAttachmentsAsync(Messages);
+
+                var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1);
+
+                if (messageList.Any()) 
+                    Messages = new ObservableCollection<MessageObject>(messageList.Select(m => new MessageObject(m)));
+                else 
+                    Messages = new ObservableCollection<MessageObject>();
+
                 WeakReferenceMessenger.Default.Send(new ScrollToBottomRequest());
+
+                // Load attachments in the background
+                await LoadAttachmentsAsync(Messages);
             }
             catch (Exception ex)
             {
+                // Handle exceptions as needed
             }
         }
         private async Task LoadAttachmentsAsync(IEnumerable<MessageObject> messages)
         {
-            foreach (var message in messages.OrderByDescending(m => m.SentDate))
+            const int batchSize = 5; // Number of attachments to load at a time
+            var attachmentsToLoad = messages
+                .OrderByDescending(m => m.SentDate)
+                .SelectMany(m => m.Attachments)
+                .Where(a => !a.IsLoaded)
+                .ToList();
+
+            for (int i = 0; i < attachmentsToLoad.Count; i += batchSize)
             {
-                foreach (var attachment in message.Attachments)
+                var batch = attachmentsToLoad.Skip(i).Take(batchSize).ToList();
+
+                // Process each batch
+                foreach (var attachment in batch)
                 {
-                    App.Current.Dispatcher.Invoke(async () =>
+                    try
                     {
-                        if (!attachment.IsLoaded)
+                        BitmapImage bitmap = null;
+
+                        // Create and initialize the BitmapImage on the UI thread
+                        await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            attachment.FileImage = new BitmapImage(new Uri(attachment.FileUrl));
+                            bitmap = new BitmapImage();
+                            bitmap.BeginInit();
+                            bitmap.UriSource = new Uri(attachment.FileUrl, UriKind.Absolute);
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.EndInit();
+
+                            // Update attachment properties
+                            attachment.FileImage = bitmap;
                             attachment.IsLoaded = true;
-                            await Task.Delay(100);
-                        }
-                    });
+                        });
+
+                        // Add a slight delay to smoothen the UI update
+                        await Task.Delay(50);
+                    }
+                    catch (Exception ex)
+                    {
+                        
+                    }
                 }
             }
         }
@@ -197,10 +221,39 @@ namespace LOKI_Client.UIs.ViewModels.Message
             {
                 if (message.ConversationId == Conversation.ConversationId)
                 {
+                    var messageObject = new MessageObject(message);
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        Messages.Add(new MessageObject(message));
+                        Messages.Add(messageObject);
                     });
+                    foreach (var attachment in messageObject.Attachments)
+                    {
+                        try
+                        {
+                            BitmapImage bitmap = null;
+
+                            // Create and initialize the BitmapImage on the UI thread
+                            await App.Current.Dispatcher.InvokeAsync(() =>
+                            {
+                                bitmap = new BitmapImage();
+                                bitmap.BeginInit();
+                                bitmap.UriSource = new Uri(attachment.FileUrl, UriKind.Absolute);
+                                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                                bitmap.EndInit();
+
+                                // Update attachment properties
+                                attachment.FileImage = bitmap;
+                                attachment.IsLoaded = true;
+                            });
+
+                            // Add a slight delay to smoothen the UI update
+                            await Task.Delay(50);
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
                 }
             }
             catch (Exception)
@@ -211,17 +264,27 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
         private void SelectFiles()
         {
+            var remainingFiles = maxInputFiles - SelectedFiles?.Count();
             var dialog = new OpenFileDialog
             {
                 Multiselect = true,
                 Filter = "All Files|*.*",
-                Title = "Select Files to Attach"
+                Title = $"Select Files to Attach (Max: {remainingFiles} Remaining)"
             };
 
             if (dialog.ShowDialog() == true)
             {
-                SelectedFiles = new ObservableCollection<FileMetadata>(
-                    dialog.FileNames.Select(filePath =>
+                // Limit the selected files to 20
+                var selectedFilePaths = dialog.FileNames.Take(maxInputFiles).ToList();
+                if (dialog.FileNames.Length > maxInputFiles)
+                {
+                    MessageBox.Show($"You can only attach up to {maxInputFiles} files.", "File Limit Reached", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+
+                if (SelectedFiles == null) SelectedFiles = new ObservableCollection<FileMetadata>();
+
+                var fileSelected = (
+                    selectedFilePaths.Select(filePath =>
                     {
                         var fileInfo = new FileInfo(filePath);
 
@@ -235,6 +298,11 @@ namespace LOKI_Client.UIs.ViewModels.Message
                             Preview = GenerateFilePreview(filePath) // Generate a preview for each file
                         };
                     }));
+
+                foreach (var file in fileSelected)
+                {
+                    SelectedFiles.Add(file);
+                }
             }
         }
 

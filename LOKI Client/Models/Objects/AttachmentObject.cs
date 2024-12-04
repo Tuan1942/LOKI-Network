@@ -1,10 +1,5 @@
-﻿using LOKI_Model.Enums;
-using LOKI_Model.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using LOKI_Model.Models;
+using System.ComponentModel;
 using System.Windows.Media.Imaging;
 
 namespace LOKI_Client.Models.Objects
@@ -20,8 +15,26 @@ namespace LOKI_Client.Models.Objects
             FileType = dto.FileType;
             CreatedDate = dto.CreatedDate;
         }
-        public BitmapImage FileImage { get; set; }
+        private BitmapImage fileImage { get; set; }
+        public BitmapImage FileImage
+        {
+            get => fileImage;
+            set
+            {
+                fileImage = value;
+                OnPropertyChanged(nameof(FileImage));
+            }
+        }
 
-        public bool IsLoaded { get; set; }
+        public bool isLoaded { get; set; }
+        public bool IsLoaded
+        {
+            get => isLoaded;
+            set
+            {
+                isLoaded = value;
+                OnPropertyChanged(nameof(IsLoaded));
+            }
+        }
     }
 }
