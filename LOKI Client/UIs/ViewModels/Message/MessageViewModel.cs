@@ -83,10 +83,23 @@ namespace LOKI_Client.UIs.ViewModels.Message
             {
                 Conversation = conversation;
                 var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1);
-                App.Current.Dispatcher.Invoke(() =>
+                if (messageList.Any())
                 {
-                    Messages = new ObservableCollection<MessageDTO>(messageList);
-                });
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        if (Messages == null)
+                        {
+                            Messages = new ObservableCollection<MessageDTO>(messageList);
+                        }
+                        else
+                        {
+                            foreach (var message in messageList)
+                            {
+                                Messages.Add(message);
+                            }
+                        }
+                    });
+                }
 
                 WeakReferenceMessenger.Default.Send(new ScrollToBottomRequest());
             }

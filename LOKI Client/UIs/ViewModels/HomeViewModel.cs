@@ -97,8 +97,6 @@ namespace LOKI_Client.UIs.ViewModels
             }
         }
 
-        #endregion
-
         private async Task DisconnectSignalRAsync()
         {
             try
@@ -116,6 +114,9 @@ namespace LOKI_Client.UIs.ViewModels
         {
             await DisconnectSignalRAsync();
         }
+
+        #endregion
+
     }
 
 }

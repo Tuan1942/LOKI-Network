@@ -41,6 +41,7 @@ namespace LOKI_Network.Services
             var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants
                 .Any(cp => cp.UserId == userId))
+                .OrderByDescending(c => c.LatestMessageDate)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
                 .Select(c => new ConversationDTO
@@ -67,6 +68,7 @@ namespace LOKI_Network.Services
         {
             var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == false)
+                .OrderByDescending(c => c.LatestMessageDate)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
                 .Select(c => new ConversationDTO
@@ -93,6 +95,7 @@ namespace LOKI_Network.Services
         {
             var conversations = await _dbContext.Conversations
                 .Where(c => c.ConversationParticipants.Any(cp => cp.UserId == userId) && c.IsGroup == true)
+                .OrderByDescending(c => c.LatestMessageDate)
                 .Include(c => c.ConversationParticipants)
                 .ThenInclude(cp => cp.User)
                 .Select(c => new ConversationDTO
@@ -144,6 +147,7 @@ namespace LOKI_Network.Services
                 ConversationName = string.IsNullOrWhiteSpace(conversationName) ? "Unnamed Conversation" : conversationName,
                 IsGroup = users.Count > 2,
                 CreatedDate = DateTime.UtcNow,
+                LatestMessageDate = DateTime.UtcNow,
                 ConversationParticipants = users.Select((u, index) => new ConversationParticipant
                 {
                     ConversationParticipantId = Guid.NewGuid(),
@@ -257,27 +261,21 @@ namespace LOKI_Network.Services
             _dbContext.Messages.Add(message);
             await _dbContext.SaveChangesAsync();
 
+            // Update latest message time
+            var conversation = await _dbContext.Conversations.FindAsync(message.ConversationId);
+            if (conversation != null)
+            {
+                conversation.LatestMessageDate = message.SentDate;
+                await _dbContext.SaveChangesAsync();
+            }
+
             if (files != null)
             {
                 // Handle each file in the list
                 foreach (var file in files)
                 {
-                    var fileResult = await _fileService.UploadFileAsync(file);
-
-                    var attachment = new Attachment
-                    {
-                        AttachmentId = Guid.NewGuid(),
-                        MessageId = message.MessageId,
-                        FileUrl = fileResult.FilePath,
-                        FileName = file.FileName,
-                        FileType = fileResult.FileType,
-                        CreatedDate = DateTime.UtcNow
-                    };
-
-                    _dbContext.Attachments.Add(attachment);
+                    await _fileService.UploadFileAsync(message.MessageId, file);
                 }
-
-                await _dbContext.SaveChangesAsync();
             }
 
             var participantList = 
