@@ -33,34 +33,9 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
         [ObservableProperty]
         private bool isLoadingMessages;
-        public bool IsFilesSelected => SelectedFiles?.Any() ?? false;
 
-        private ObservableCollection<FileMetadata> selectedFiles = new ObservableCollection<FileMetadata>();
-
-        public ObservableCollection<FileMetadata> SelectedFiles
-        {
-            get => selectedFiles;
-            set
-            {
-                if (selectedFiles != null)
-                {
-                    selectedFiles.CollectionChanged -= SelectedFiles_CollectionChanged;
-                }
-
-                SetProperty(ref selectedFiles, value);
-
-                if (selectedFiles != null)
-                {
-                    selectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
-                }
-                OnPropertyChanged(nameof(IsFilesSelected));
-                OnPropertyChanged(nameof(SelectedFiles));
-            }
-        }
-        private void SelectedFiles_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            OnPropertyChanged(nameof(IsFilesSelected));
-        }
+        [ObservableProperty]
+        private ObservableCollection<FileMetadata> selectedFiles;
 
         public RelayCommand SelectFilesCommand => new RelayCommand(SelectFiles);
         public RelayCommand ClearSelectedFilesCommand => new RelayCommand(ClearSelectedFiles);
@@ -75,14 +50,16 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
         private async void RegisterServices()
         {
-            WeakReferenceMessenger.Default.Register<RefreshConversationMessages>(this, async (r, action) => await RefreshMessages(action.Conversation));
+            WeakReferenceMessenger.Default.Register<RefreshConversationMessages>(this, async (r, action) => await ChangeConversation(action.Conversation));
             WeakReferenceMessenger.Default.Register<AddMessageRequest>(this, async (r, action) => await AddMessage(action.Message));
         }
 
-        async Task RefreshMessages(ConversationDTO conversation)
+        async Task ChangeConversation(ConversationDTO conversation)
         {
             try
             {
+                if (Conversation == null) Conversation = new();
+                if (conversation.ConversationId == Conversation.ConversationId) return;
                 Conversation = conversation;
 
                 var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1);
@@ -309,7 +286,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
         private void ClearSelectedFiles()
         {
             if (SelectedFiles != null) 
-                SelectedFiles.Clear();
+                SelectedFiles = null;
         }
 
         private BitmapImage GenerateFilePreview(string filePath)
@@ -362,10 +339,5 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 return new BitmapImage(new Uri("pack://application:,,,/Resources/FileIcons/oth_icon.png"));
             }
         }
-    }
-    public class FileMetadata
-    {
-        public IFormFile File { get; set; }
-        public BitmapImage Preview { get; set; } // Preview image for display
     }
 }

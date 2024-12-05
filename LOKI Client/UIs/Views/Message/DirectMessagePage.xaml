@@ -13,6 +13,7 @@
 
     <Page.Resources>
         <vc:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <vc:ObjectToVisibilityConverter x:Key="ObjectToVisibilityConverter" />
 
     </Page.Resources>
     <Grid>
@@ -24,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <!-- Scrollable Messages Section -->
-        <ScrollViewer Name="MainContent" Loaded="ScrollViewer_Loaded" Grid.Row="0" HorizontalAlignment="Stretch" Background="LightGray" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Name="MainContent" Grid.Row="0" HorizontalAlignment="Stretch" Background="LightGray" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Messages}">
                 <ItemsControl.ItemTemplate>
                     <StaticResource ResourceKey="DirectMessageItem" />
@@ -60,7 +61,7 @@
                 </ScrollViewer>
                 <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="20" Height="20" Margin="5"
                         Command="{Binding ClearSelectedFilesCommand}" 
-                        Visibility="{Binding IsFilesSelected, Converter={StaticResource BooleanToVisibilityConverter}}">X</Button>
+                        Visibility="{Binding SelectedFiles, Converter={StaticResource ObjectToVisibilityConverter}}">X</Button>
             </Grid>
             <Grid Height="50" Background="Blue">
                 <Grid.Resources>
