@@ -1,5 +1,4 @@
-﻿using LOKI_Model.Models;
-using Microsoft.AspNetCore.SignalR.Client;
+﻿using Microsoft.AspNetCore.SignalR.Client;
 
 namespace LOKI_Client.ApiClients.Services
 {

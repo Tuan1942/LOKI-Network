@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:LOKI_Client"
         mc:Ignorable="d"
         xmlns:vc="clr-namespace:LOKI_Client.UIs.Converters"
-        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors" xmlns:viewmodels="clr-namespace:LOKI_Client.UIs.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:HomeViewModel}"
         Title="MainWindow" Height="600" Width="1000"
         MinHeight="600" MinWidth="1000">
     <Window.Resources>
@@ -29,6 +29,17 @@
         </StackPanel>
         <Grid Grid.Column="1" Background="red">
             <Frame Source="../UIs/Views/Message/DirectMessagePage.xaml"/>
+        </Grid>
+        <Grid Grid.ColumnSpan="2" Visibility="{Binding ProfilePageOpened, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid Opacity="0.3" Background="Black">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseLeftButtonUp">
+                        <i:InvokeCommandAction Command="{Binding CloseProfilePageCommand}" 
+                                   CommandParameter="{Binding}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Grid>
+            <Frame Source="../UIs/Views/Account/ProfilePage.xaml"/>
         </Grid>
         <Grid Grid.ColumnSpan="2" Visibility="{Binding LoggedIn, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
             <Grid Opacity="0.3" Background="Black"/>

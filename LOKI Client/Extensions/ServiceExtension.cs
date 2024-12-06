@@ -28,6 +28,7 @@ namespace LOKI_Client.Extensions
             services.AddSingleton<LoginViewModel>();
             services.AddSingleton<ConversationViewModel>();
             services.AddSingleton<MessageViewModel>();
+            services.AddSingleton<ProfileViewModel>();
         }
         private static void RegisterServices(IServiceCollection services)
         {
@@ -78,8 +79,6 @@ namespace LOKI_Client.Extensions
 
             // Register SignalRService
             services.AddSingleton<SignalRService>();
-
-            services.AddSingleton(new WebSocketService(new Uri(BaseClient.WebSocketAddress)));
         }
     }
 }

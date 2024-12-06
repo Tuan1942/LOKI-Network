@@ -5,7 +5,6 @@ using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Client.Models;
 using LOKI_Client.Models.Helper;
 using LOKI_Client.Models.Objects;
-using LOKI_Model.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Win32;
@@ -26,7 +25,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
         ObservableCollection<MessageObject> messages;
 
         [ObservableProperty]
-        private ConversationDTO conversation;
+        private ConversationObject conversation;
 
         [ObservableProperty]
         private string inputContent;
@@ -54,7 +53,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
             WeakReferenceMessenger.Default.Register<AddMessageRequest>(this, async (r, action) => await AddMessage(action.Message));
         }
 
-        async Task ChangeConversation(ConversationDTO conversation)
+        async Task ChangeConversation(ConversationObject conversation)
         {
             try
             {
@@ -65,7 +64,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 var messageList = await _conversationService.GetMessagesByConversationAsync(Conversation.ConversationId, 1);
 
                 if (messageList.Any()) 
-                    Messages = new ObservableCollection<MessageObject>(messageList.Select(m => new MessageObject(m)));
+                    Messages = new ObservableCollection<MessageObject>(messageList);
                 else 
                     Messages = new ObservableCollection<MessageObject>();
 
@@ -85,7 +84,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
             var attachmentsToLoad = messages
                 .OrderByDescending(m => m.SentDate)
                 .SelectMany(m => m.Attachments)
-                .Where(a => !a.IsLoaded)
+                .Where(a => a.FileImage == null)
                 .ToList();
 
             for (int i = 0; i < attachmentsToLoad.Count; i += batchSize)
@@ -97,6 +96,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
                 {
                     try
                     {
+                        if (attachment.FileImage != null) return;
                         BitmapImage bitmap = null;
 
                         // Create and initialize the BitmapImage on the UI thread
@@ -110,11 +110,10 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
                             // Update attachment properties
                             attachment.FileImage = bitmap;
-                            attachment.IsLoaded = true;
                         });
 
                         // Add a slight delay to smoothen the UI update
-                        await Task.Delay(50);
+                        await Task.Delay(100);
                     }
                     catch (Exception ex)
                     {
@@ -153,7 +152,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
                 foreach (var message in messageList)
                 {
-                    Messages.Insert(0, new MessageObject(message));
+                    await AddMessage(message, true);
                 }
 
                 await Task.Delay(1);
@@ -179,7 +178,7 @@ namespace LOKI_Client.UIs.ViewModels.Message
         {
             try
             {
-                var message = new MessageDTO
+                var message = new MessageObject
                 {
                     ConversationId = Conversation.ConversationId,
                     Content = InputContent,
@@ -192,21 +191,24 @@ namespace LOKI_Client.UIs.ViewModels.Message
             { }
         }
 
-        private async Task AddMessage(MessageDTO message)
+        private async Task AddMessage(MessageObject message, bool isPrepend = false)
         {
             try
             {
                 if (message.ConversationId == Conversation.ConversationId)
                 {
-                    var messageObject = new MessageObject(message);
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        Messages.Add(messageObject);
+                        if (isPrepend)
+                            Messages.Insert(0, message);
+                        else
+                            Messages.Add(message);
                     });
-                    foreach (var attachment in messageObject.Attachments)
+                    foreach (var attachment in message.Attachments)
                     {
                         try
                         {
+                            if (attachment.FileImage != null) continue;
                             BitmapImage bitmap = null;
 
                             // Create and initialize the BitmapImage on the UI thread
@@ -220,11 +222,10 @@ namespace LOKI_Client.UIs.ViewModels.Message
 
                                 // Update attachment properties
                                 attachment.FileImage = bitmap;
-                                attachment.IsLoaded = true;
                             });
 
                             // Add a slight delay to smoothen the UI update
-                            await Task.Delay(50);
+                            await Task.Delay(100);
                         }
                         catch (Exception ex)
                         {

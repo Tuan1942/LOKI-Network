@@ -4,13 +4,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using LOKI_Client.ApiClients.Interfaces;
 using LOKI_Client.ApiClients.Services;
 using LOKI_Client.Models;
-using LOKI_Model.Models;
-using System;
-using System.Collections.Generic;
+using LOKI_Client.Models.Objects;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LOKI_Client.UIs.ViewModels.Conversation
 {
@@ -20,8 +15,16 @@ namespace LOKI_Client.UIs.ViewModels.Conversation
         private readonly IConversationService _conversationService;
 
         [ObservableProperty]
-        private ObservableCollection<ConversationDTO> conversations;
-        public RelayCommand<ConversationDTO> OpenConversationCommand => new RelayCommand<ConversationDTO>(OpenConversation);
+        private ObservableCollection<ConversationObject> conversations;
+
+        [ObservableProperty]
+        private ObservableCollection<ConversationObject> filteredConversations;
+
+        [ObservableProperty]
+        private string searchText;
+        public IRelayCommand ClearSearchCommand => new RelayCommand(() => SearchText = string.Empty);
+
+        public RelayCommand<ConversationObject> OpenConversationCommand => new RelayCommand<ConversationObject>(OpenConversation);
         public ConversationViewModel(FriendshipService friendshipService, IConversationService conversationService)
         {
             _friendshipService = friendshipService;
@@ -30,27 +33,52 @@ namespace LOKI_Client.UIs.ViewModels.Conversation
         }
         private void RegisterService()
         {
-            WeakReferenceMessenger.Default.Register<RefreshConversationListRequest>(this, async (r, action) => { await RefreshConversationListAsync(action.Token); });
+            WeakReferenceMessenger.Default.Register<RefreshConversationListRequest>(this, async (r, action) => { await RefreshConversationListAsync(); });
             WeakReferenceMessenger.Default.Register<AddMessageRequest>(this, (r, action) => NotifyConversation(action.Message));
+            PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(SearchText))
+                {
+                    PerformSearch();
+                }
+            };
         }
-        private async Task RefreshConversationListAsync(string token)
+        private void PerformSearch()
+        {
+            if (Conversations == null) return;
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                FilteredConversations = new ObservableCollection<ConversationObject>(Conversations);
+            }
+            else
+            {
+                var lowerSearchText = SearchText.ToLower();
+                var filtered = Conversations
+                    .Where(c => c.Name.ToLower().Contains(lowerSearchText))
+                    .ToList();
+
+                FilteredConversations = new ObservableCollection<ConversationObject>(filtered);
+            }
+        }
+        private async Task RefreshConversationListAsync()
         {
             try
             {
                 var result = await _conversationService.GetConversationsAsync();
                 if (result == null) { return; }
-                Conversations = new ObservableCollection<ConversationDTO>(result);
+                Conversations = new ObservableCollection<ConversationObject>(result);
+                FilteredConversations = new ObservableCollection<ConversationObject>(result);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
-        private void OpenConversation(ConversationDTO conversation)
+        private void OpenConversation(ConversationObject conversation)
         {
             WeakReferenceMessenger.Default.Send(new RefreshConversationMessages(conversation));
         }
-        private void NotifyConversation(MessageDTO message)
+        private void NotifyConversation(MessageObject message)
         {
             var conversation = Conversations.FirstOrDefault(c => c.ConversationId == message.ConversationId);
             if (conversation == null) return;

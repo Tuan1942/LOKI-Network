@@ -23,7 +23,7 @@
                 </StackPanel>
                 <StackPanel>
                     <TextBlock Text="Password:" VerticalAlignment="Top" HorizontalAlignment="Left"  />
-                    <PasswordBox PasswordChanged="PasswordBox_PasswordChanged" VerticalAlignment="Top" HorizontalAlignment="Left" Width="200"/>
+                    <PasswordBox x:Name="passwordBox" PasswordChanged="PasswordBox_PasswordChanged" VerticalAlignment="Top" HorizontalAlignment="Left" Width="200"/>
                 </StackPanel>
                 <Button Content="{DynamicResource Login}" Command="{Binding LoginCommand}" Width="100" Height="30"/>
                 <Button Content="{DynamicResource Register}" Command="{Binding RegisterCommand}" Width="100" Height="30"/>

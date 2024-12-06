@@ -15,7 +15,7 @@ namespace LOKI_Network.Helpers
             _configuration = configuration;
         }
 
-        public string GenerateJwtToken(UserDTO user, IConfiguration configuration)
+        public (string, DateTime) GenerateJwtToken(UserDTO user, IConfiguration configuration)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -32,17 +32,18 @@ namespace LOKI_Network.Helpers
             //{
             //    claims.Add(new Claim(ClaimTypes.Role, role));
             //}
+            var expireDate = DateTime.UtcNow.AddMinutes(2);
 
             var token = new JwtSecurityToken(
                 issuer: configuration["Jwt:Issuer"],
                 audience: configuration["Jwt:Audience"],
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: expireDate,
                 signingCredentials: credentials
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return (new JwtSecurityTokenHandler().WriteToken(token), expireDate);
         }
         //private List<string> GetUserRoles(int userId)
         //{

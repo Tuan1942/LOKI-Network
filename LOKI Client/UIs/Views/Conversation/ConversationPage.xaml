@@ -9,8 +9,21 @@
 
     <StackPanel Background="Beige" Width="200">
         <Grid Height="100" Background="DarkGreen"></Grid>
+        <Grid Background="Pink" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid>            
+                <TextBox x:Name="SearchInput" Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Background="Red"/>
+                <Button Width="20" HorizontalAlignment="Right" Content="X" Command="{Binding ClearSearchCommand}" />
+            </Grid>
+            <Button Width="20" Grid.Column="1"/>
+            <Button Width="20" Grid.Column="2"/>
+        </Grid>
         <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
-            <ItemsControl ItemsSource="{Binding Conversations}">
+            <ItemsControl x:Name="ConversationItems" ItemsSource="{Binding FilteredConversations}">
                 <ItemsControl.ItemTemplate>
                     <StaticResource ResourceKey="ConversationItem" />
                 </ItemsControl.ItemTemplate>

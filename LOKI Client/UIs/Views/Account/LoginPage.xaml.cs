@@ -1,4 +1,6 @@
-﻿using LOKI_Client.UIs.ViewModels.Account;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LOKI_Client.Models;
+using LOKI_Client.UIs.ViewModels.Account;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +27,7 @@ namespace LOKI_Client.UIs.Views.Account
         {
             InitializeComponent();
             DataContext = App.Current.Services.GetService(typeof(LoginViewModel));
+            WeakReferenceMessenger.Default.Register<OpenLoginPageRequest>(this, (r, action) => { passwordBox.Password = ""; });
         }
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {

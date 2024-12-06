@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using LOKI_Client.ApiClients.Interfaces;
-using LOKI_Model.Models;
+using LOKI_Client.Models.Objects;
 using Microsoft.AspNetCore.Http;
 
 namespace LOKI_Client.ApiClients.Services
@@ -23,18 +19,18 @@ namespace LOKI_Client.ApiClients.Services
         /// <summary>
         /// Get all conversations for the logged-in user.
         /// </summary>
-        public async Task<List<ConversationDTO>> GetConversationsAsync()
+        public async Task<List<ConversationObject>> GetConversationsAsync()
         {
             var response = await _httpClient.GetAsync("conversation");
 
             if (response.IsSuccessStatusCode)
             {
                 var responseData = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<List<ConversationDTO>>>(responseData, new JsonSerializerOptions
+                var result = JsonSerializer.Deserialize<ApiResponse<List<ConversationObject>>>(responseData, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return result?.Data ?? new List<ConversationDTO>();
+                return result?.Data ?? new List<ConversationObject>();
             }
 
             throw new HttpRequestException($"Failed to get conversations. Status Code: {response.StatusCode}");
@@ -43,18 +39,18 @@ namespace LOKI_Client.ApiClients.Services
         /// <summary>
         /// Get all participants of a specific conversation.
         /// </summary>
-        public async Task<List<UserDTO>> GetParticipantsAsync(Guid conversationId)
+        public async Task<List<UserObject>> GetParticipantsAsync(Guid conversationId)
         {
             var response = await _httpClient.GetAsync($"conversation/{conversationId}");
 
             if (response.IsSuccessStatusCode)
             {
                 var responseData = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<List<UserDTO>>>(responseData, new JsonSerializerOptions
+                var result = JsonSerializer.Deserialize<ApiResponse<List<UserObject>>>(responseData, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return result?.Data ?? new List<UserDTO>();
+                return result?.Data ?? new List<UserObject>();
             }
 
             throw new HttpRequestException($"Failed to get participants. Status Code: {response.StatusCode}");
@@ -63,18 +59,18 @@ namespace LOKI_Client.ApiClients.Services
         /// <summary>
         /// Get attachments of a specific conversation.
         /// </summary>
-        public async Task<List<AttachmentDTO>> GetAttachmentsByConversationAsync(Guid conversationId)
+        public async Task<List<AttachmentObject>> GetAttachmentsByConversationAsync(Guid conversationId)
         {
             var response = await _httpClient.GetAsync($"conversation/{conversationId}/files");
 
             if (response.IsSuccessStatusCode)
             {
                 var responseData = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<List<AttachmentDTO>>>(responseData, new JsonSerializerOptions
+                var result = JsonSerializer.Deserialize<ApiResponse<List<AttachmentObject>>>(responseData, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return result?.Data ?? new List<AttachmentDTO>();
+                return result?.Data ?? new List<AttachmentObject>();
             }
 
             throw new HttpRequestException($"Failed to get attachments. Status Code: {response.StatusCode}");
@@ -83,34 +79,34 @@ namespace LOKI_Client.ApiClients.Services
         /// <summary>
         /// Get paginated messages of a specific conversation.
         /// </summary>
-        public async Task<List<MessageDTO>> GetMessagesByConversationAsync(Guid conversationId, int page)
+        public async Task<List<MessageObject>> GetMessagesByConversationAsync(Guid conversationId, int page)
         {
             var response = await _httpClient.GetAsync($"conversation/{conversationId}/messages/{page}");
 
             if (response.IsSuccessStatusCode)
             {
                 var responseData = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<List<MessageDTO>>>(responseData, new JsonSerializerOptions
+                var result = JsonSerializer.Deserialize<ApiResponse<List<MessageObject>>>(responseData, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return result?.Data ?? new List<MessageDTO>();
+                return result?.Data ?? new List<MessageObject>();
             }
 
             throw new HttpRequestException($"Failed to get messages. Status Code: {response.StatusCode}");
         }
-        public async Task<List<MessageDTO>> GetNextMessagesAsync(Guid conversationId, Guid messageId)
+        public async Task<List<MessageObject>> GetNextMessagesAsync(Guid conversationId, Guid messageId)
         {
             var response = await _httpClient.GetAsync($"conversation/{conversationId}/messages/{messageId}");
 
             if (response.IsSuccessStatusCode)
             {
                 var responseData = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<List<MessageDTO>>>(responseData, new JsonSerializerOptions
+                var result = JsonSerializer.Deserialize<ApiResponse<List<MessageObject>>>(responseData, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return result?.Data ?? new List<MessageDTO>();
+                return result?.Data ?? new List<MessageObject>();
             }
 
             throw new HttpRequestException($"Failed to get messages. Status Code: {response.StatusCode}");
@@ -157,7 +153,7 @@ namespace LOKI_Client.ApiClients.Services
         /// <summary>
         /// Send a message to a specific conversation.
         /// </summary>
-        public async Task SendMessageAsync(Guid conversationId, MessageDTO message, List<IFormFile> files)
+        public async Task SendMessageAsync(Guid conversationId, MessageObject message, List<IFormFile> files)
         {
             using var content = new MultipartFormDataContent();
             // Serialize the message to send as form data

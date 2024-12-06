@@ -67,7 +67,9 @@ namespace LOKI_Network.Controllers
                 }
                 var u = await _userService.GetUser(user.Username);
                 var jwtHelper = new JwtHelper(_configuration);
-                u.Token = jwtHelper.GenerateJwtToken(u, _configuration);
+                var result = jwtHelper.GenerateJwtToken(u, _configuration);
+                u.Token = result.Item1;
+                u.TokenExpirationDate = result.Item2;
                 return Ok(u);
             }
             catch (Exception e)

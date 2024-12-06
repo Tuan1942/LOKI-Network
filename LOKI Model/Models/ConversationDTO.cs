@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LOKI_Model.Models
 {
-    public class ConversationDTO : INotifyPropertyChanged
+    public class ConversationDTO
     {
         public Guid ConversationId { get; set; }
         public string? Name { get; set; }
@@ -16,6 +16,5 @@ namespace LOKI_Model.Models
         public ObservableCollection<UserDTO> Users { get; set; }
         public DateTime CreatedDate { get; set; }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

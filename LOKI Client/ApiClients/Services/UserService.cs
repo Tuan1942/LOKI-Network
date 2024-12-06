@@ -1,9 +1,8 @@
 ﻿using LOKI_Client.ApiClients.Interfaces;
-using LOKI_Model.Models;
+using LOKI_Client.Models.Objects;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace LOKI_Client.ApiClients.Services
 {
@@ -16,11 +15,11 @@ namespace LOKI_Client.ApiClients.Services
             _httpClient = httpClient;
         }
 
-        public async Task<UserDTO> Login(UserDTO user)  
+        public async Task<UserObject> Login(UserObject user)  
         {
             try
             {
-                var response = await PostAsync<UserDTO, UserDTO>("user/Login", user);
+                var response = await PostAsync<UserObject, UserObject>("user/Login", user);
                 return response;
             }
             catch (Exception ex)
@@ -31,11 +30,11 @@ namespace LOKI_Client.ApiClients.Services
             }
         }
 
-        public async Task<bool> Register(UserDTO user)
+        public async Task<bool> Register(UserObject user)
         {
             try
             {
-                var response = await PostAsync<UserDTO, object>("user/Register", user);
+                var response = await PostAsync<UserObject, object>("user/Register", user);
                 return response != null;
             }
             catch (Exception ex)

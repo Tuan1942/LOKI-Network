@@ -316,6 +316,7 @@ namespace LOKI_Network.Services
             // Map the messages to DTOs
             return messages.Select(m => new MessageDTO
             {
+                ConversationId = m.ConversationId,
                 MessageId = m.MessageId,
                 User = new UserDTO
                 {

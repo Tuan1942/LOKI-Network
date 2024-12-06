@@ -1,15 +1,14 @@
 ﻿using LOKI_Model.Models;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace LOKI_Client.Models.Objects
 {
-    public class MessageObject : MessageDTO
+    public class MessageObject : MessageDTO, INotifyPropertyChanged
     {
+        public MessageObject() 
+        {
+        }
         public MessageObject(MessageDTO dto)
         {
             MessageId = dto.MessageId;
@@ -19,8 +18,18 @@ namespace LOKI_Client.Models.Objects
             SentDate = dto.SentDate;
             IsRead = dto.IsRead;
             User = dto.User;
-            Attachments = new ObservableCollection<AttachmentObject>(dto.Attachments.Select(a => new AttachmentObject(a)));
+            var attachments = dto.Attachments?.Select(a => new AttachmentObject(a)).ToList() ?? new List<AttachmentObject>();
+            Attachments = new ObservableCollection<AttachmentObject>(attachments);
         }
         public new ObservableCollection<AttachmentObject> Attachments { get; set; }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
     }
 }

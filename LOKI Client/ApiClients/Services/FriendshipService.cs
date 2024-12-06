@@ -1,12 +1,6 @@
-﻿using LOKI_Model.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using LOKI_Client.Models.Objects;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace LOKI_Client.ApiClients.Services
 {
@@ -19,7 +13,7 @@ namespace LOKI_Client.ApiClients.Services
         {
             _httpClient = httpClient;
         }
-        public async Task<List<UserDTO>> GetFriendsAsync(string token)
+        public async Task<List<UserObject>> GetFriendsAsync(string token)
         {
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token cannot be null or empty.", nameof(token));
@@ -39,10 +33,10 @@ namespace LOKI_Client.ApiClients.Services
 
                     if (response.Content.Headers.ContentType?.MediaType == "application/json")
                     {
-                        return JsonSerializer.Deserialize<List<UserDTO>>(responseData, new JsonSerializerOptions
+                        return JsonSerializer.Deserialize<List<UserObject>>(responseData, new JsonSerializerOptions
                         {
                             PropertyNameCaseInsensitive = true
-                        }) ?? new List<UserDTO>();
+                        }) ?? new List<UserObject>();
                     }
 
                     throw new InvalidOperationException("Unexpected content type in response.");

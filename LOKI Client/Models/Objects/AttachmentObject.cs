@@ -4,8 +4,9 @@ using System.Windows.Media.Imaging;
 
 namespace LOKI_Client.Models.Objects
 {
-    public class AttachmentObject : AttachmentDTO
+    public class AttachmentObject : AttachmentDTO, INotifyPropertyChanged
     {
+        public AttachmentObject() { }
         public AttachmentObject(AttachmentDTO dto)
         {
             AttachmentId = dto.AttachmentId;
@@ -26,14 +27,12 @@ namespace LOKI_Client.Models.Objects
             }
         }
 
-        public bool isLoaded { get; set; }
-        public bool IsLoaded
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
         {
-            get => isLoaded;
-            set
+            if (PropertyChanged != null)
             {
-                isLoaded = value;
-                OnPropertyChanged(nameof(IsLoaded));
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
     }

@@ -1,49 +1,61 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
-using LOKI_Model.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
+using LOKI_Client.Models.Objects;
 
 namespace LOKI_Client.Models
 {
-    public class LoginRequest : ValueChangedMessage<UserDTO>
+    public class LoginRequest : ValueChangedMessage<UserObject>
     {
-        public LoginRequest(UserDTO user) : base(user)
+        public LoginRequest(UserObject user) : base(user)
         {
             User = user;
         }
 
-        public UserDTO User { get; set; }
+        public UserObject User { get; set; }
     }
-    public class RefreshConversationListRequest : ValueChangedMessage<string>
+    public class OpenProfilePageRequest : ValueChangedMessage<UserObject>
     {
-        public RefreshConversationListRequest(string token) : base(token)
+        public OpenProfilePageRequest(UserObject user) : base(user)
         {
-            Token = token;
+            User = user;
         }
 
-        public string Token { get; set; }
+        public UserObject User { get; set; }
     }
-    public class AddMessageRequest : ValueChangedMessage<MessageDTO>
+    public class UpdateProfilePageRequest : ValueChangedMessage<UserObject>
     {
-        public AddMessageRequest(MessageDTO message) : base(message)
+        public UpdateProfilePageRequest(UserObject user) : base(user)
+        {
+            User = user;
+        }
+
+        public UserObject User { get; set; }
+    }
+    public class RefreshConversationListRequest
+    {
+        //public RefreshConversationListRequest(string token) : base(token)
+        //{
+        //    Token = token;
+        //}
+
+        //public string Token { get; set; }
+    }
+    public class AddMessageRequest : ValueChangedMessage<MessageObject>
+    {
+        public AddMessageRequest(MessageObject message) : base(message)
         {
             Message = message;
         }
 
-        public MessageDTO Message { get; set; }
+        public MessageObject Message { get; set; }
     }
-    public class RefreshConversationMessages : ValueChangedMessage<ConversationDTO>
+    public class RefreshConversationMessages : ValueChangedMessage<ConversationObject>
     {
-        public RefreshConversationMessages(ConversationDTO conversation) : base(conversation)
+        public RefreshConversationMessages(ConversationObject conversation) : base(conversation)
         {
             Conversation = conversation;
         }
 
-        public ConversationDTO Conversation { get; set; }
+        public ConversationObject Conversation { get; set; }
     }
     public class OpenLoginPageRequest
     {
@@ -53,13 +65,13 @@ namespace LOKI_Client.Models
     {
 
     }
-    public class ConnectWebSocketRequest : ValueChangedMessage<string>
+    public class ConnectSignalRRequest
     {
-        public ConnectWebSocketRequest(string token) : base(token)
-        {
-            Token = token;
-        }
+        //public ConnectSignalRRequest(string token) : base(token)
+        //{
+        //    Token = token;
+        //}
 
-        public string Token { get; set; }
+        //public string Token { get; set; }
     }
 }

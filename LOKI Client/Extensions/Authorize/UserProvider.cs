@@ -1,30 +1,23 @@
 ﻿using LOKI_Client.Models.Helper;
-using LOKI_Model.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
+using LOKI_Client.Models.Objects;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace LOKI_Client.Extensions.Authorize
 {
     public class UserProvider
     {
-        private UserDTO _user;
-        private string _token;
+        private UserObject _user;
 
         public UserProvider()
         {
             var userJson = ApplicationSettingsHelper.GetSetting(nameof(_user));
             if (!string.IsNullOrEmpty(userJson))
             {
-                _user = JsonSerializer.Deserialize<UserDTO>(userJson) ?? new UserDTO();
+                _user = JsonSerializer.Deserialize<UserObject>(userJson) ?? new UserObject();
             }
-            else _user = new UserDTO();
+            else _user = new UserObject();
         }
-        public UserDTO User
+        public UserObject User
         {
             get { return _user; }
             set { 
@@ -35,5 +28,6 @@ namespace LOKI_Client.Extensions.Authorize
         }
         public string GetToken() => _user?.Token;
 
+        public bool IsTokenExpired() => DateTime.UtcNow >= _user?.TokenExpirationDate;
     }
 }

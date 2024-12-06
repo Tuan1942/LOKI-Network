@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LOKI_Client.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -18,6 +20,14 @@ namespace LOKI_Client.Extensions.Authorize
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            // Check if the token is expired
+            if (_userProvider.IsTokenExpired())
+            {
+                // Notify HomeViewModel about token expiration
+                WeakReferenceMessenger.Default.Send(new OpenLoginPageRequest());
+            }
+
+            // Add the Authorization header if the token is valid
             var token = _userProvider.GetToken();
             if (!string.IsNullOrEmpty(token))
             {

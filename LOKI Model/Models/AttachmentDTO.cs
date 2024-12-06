@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LOKI_Model.Models
 {
-    public class AttachmentDTO : INotifyPropertyChanged
+    public class AttachmentDTO
     {
         public Guid AttachmentId { get; set; } // Primary Key
         public Guid MessageId { get; set; } // Foreign Key
@@ -17,13 +17,5 @@ namespace LOKI_Model.Models
         public FileType FileType { get; set; }
         public DateTime CreatedDate { get; set; }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
     }
 }
